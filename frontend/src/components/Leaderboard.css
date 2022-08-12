@@ -1,0 +1,14 @@
+td,
+th {
+  border: 1px solid black;
+  padding: 5px;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+.my-wallet {
+  color: green;
+  font-weight: bold;
+}
