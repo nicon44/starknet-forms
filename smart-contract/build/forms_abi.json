@@ -1,0 +1,257 @@
+[
+    {
+        "members": [
+            {
+                "name": "name",
+                "offset": 0,
+                "type": "felt"
+            },
+            {
+                "name": "created_at",
+                "offset": 1,
+                "type": "felt"
+            },
+            {
+                "name": "enabled",
+                "offset": 2,
+                "type": "felt"
+            }
+        ],
+        "name": "Test",
+        "size": 3,
+        "type": "struct"
+    },
+    {
+        "members": [
+            {
+                "name": "description",
+                "offset": 0,
+                "type": "felt"
+            },
+            {
+                "name": "optionA",
+                "offset": 1,
+                "type": "felt"
+            },
+            {
+                "name": "optionB",
+                "offset": 2,
+                "type": "felt"
+            },
+            {
+                "name": "optionC",
+                "offset": 3,
+                "type": "felt"
+            },
+            {
+                "name": "optionD",
+                "offset": 4,
+                "type": "felt"
+            }
+        ],
+        "name": "Question",
+        "size": 5,
+        "type": "struct"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_test",
+                "type": "felt"
+            }
+        ],
+        "name": "view_test",
+        "outputs": [
+            {
+                "name": "test",
+                "type": "Test"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "view_test_count",
+        "outputs": [
+            {
+                "name": "count",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_test",
+                "type": "felt"
+            }
+        ],
+        "name": "view_question_count",
+        "outputs": [
+            {
+                "name": "bet_count",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_test",
+                "type": "felt"
+            },
+            {
+                "name": "id_question",
+                "type": "felt"
+            }
+        ],
+        "name": "view_question",
+        "outputs": [
+            {
+                "name": "question",
+                "type": "Question"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_test",
+                "type": "felt"
+            }
+        ],
+        "name": "view_questions",
+        "outputs": [
+            {
+                "name": "records_len",
+                "type": "felt"
+            },
+            {
+                "name": "records",
+                "type": "Question*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_test",
+                "type": "felt"
+            }
+        ],
+        "name": "view_user_test",
+        "outputs": [
+            {
+                "name": "bool",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "name",
+                "type": "felt"
+            }
+        ],
+        "name": "create_test",
+        "outputs": [
+            {
+                "name": "id_test",
+                "type": "felt"
+            }
+        ],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_test",
+                "type": "felt"
+            },
+            {
+                "name": "description",
+                "type": "felt"
+            },
+            {
+                "name": "optionA",
+                "type": "felt"
+            },
+            {
+                "name": "optionB",
+                "type": "felt"
+            },
+            {
+                "name": "optionC",
+                "type": "felt"
+            },
+            {
+                "name": "optionD",
+                "type": "felt"
+            }
+        ],
+        "name": "add_question",
+        "outputs": [
+            {
+                "name": "id_question",
+                "type": "felt"
+            }
+        ],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_test",
+                "type": "felt"
+            },
+            {
+                "name": "answers_len",
+                "type": "felt"
+            },
+            {
+                "name": "answers",
+                "type": "felt*"
+            }
+        ],
+        "name": "add_correct_answer",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_test",
+                "type": "felt"
+            },
+            {
+                "name": "answers_len",
+                "type": "felt"
+            },
+            {
+                "name": "answers",
+                "type": "felt*"
+            }
+        ],
+        "name": "points",
+        "outputs": [
+            {
+                "name": "point",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]
