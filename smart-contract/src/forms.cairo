@@ -16,7 +16,7 @@ from starkware.cairo.common.bool import TRUE, FALSE
 struct Test:
     member name : felt
     member created_at : felt
-    member enabled : felt
+    member open : felt
 end
 
 struct Question:
@@ -71,6 +71,43 @@ end
 #
 # Modifier
 #
+
+func assert_only_owner{
+    syscall_ptr : felt*,
+    pedersen_ptr : HashBuiltin*,
+    range_check_ptr
+}(id_test: felt):
+    let (t : Test) = test.read(id_test)
+    let (caller) = get_caller_address()
+    with_attr error_message("Ownable: caller is not the owner"):
+        assert t.created_at = caller
+    end
+    return ()
+end
+
+func test_open{
+    syscall_ptr : felt*,
+    pedersen_ptr : HashBuiltin*,
+    range_check_ptr
+}(id_test: felt):
+    let (t : Test) = test.read(id_test)
+    with_attr error_message("Test: is closed"):
+        assert t.open = TRUE
+    end
+    return ()
+end
+
+func test_closed{
+    syscall_ptr : felt*,
+    pedersen_ptr : HashBuiltin*,
+    range_check_ptr
+}(id_test: felt):
+    let (t : Test) = test.read(id_test)
+    with_attr error_message("Test: is open"):
+        assert t.open = FALSE
+    end
+    return ()
+end
 
 #
 # Getters
@@ -152,11 +189,22 @@ end
 func create_test{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     name : felt
 ) -> (id_test : felt):
+
     let (id_test) = test_count.read()
     let (caller_address) = get_caller_address()
     test.write(id_test, Test(name, caller_address, TRUE))
     test_count.write(id_test + 1)
     return (id_test)
+end
+
+@external
+func ready_test{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    id_test : felt
+) -> ():
+    assert_only_owner(id_test)
+    let (t : Test) = test.read(id_test)
+    test.write(id_test, Test(t.name, t.created_at, FALSE))
+    return ()
 end
 
 @external
@@ -168,6 +216,10 @@ func add_question{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
     optionC : felt,
     optionD : felt,
 ) -> (id_question : felt):
+    
+    assert_only_owner(id_test)
+    test_open(id_test)
+
     let (id_question) = question_count.read(id_test)
     questions.write(
         id_test,
@@ -189,6 +241,9 @@ end
 func add_correct_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     id_test : felt, answers_len : felt, answers : felt*
 ) -> ():
+    assert_only_owner(id_test)
+    test_open(id_test)
+
     let (count_question) = question_count.read(id_test)
     _recurse_add_correct_answer(id_test, count_question, answers, 0)
 
@@ -200,6 +255,9 @@ end
 func points{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     id_test : felt, answers_len : felt, answers : felt*
 ) -> (point : felt):
+
+    test_closed(id_test)
+
     let (count_question) = question_count.read(id_test)
     let (point) = _recurse_add_answers(id_test, count_question, answers, 0)
     
