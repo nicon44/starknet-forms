@@ -1,6 +1,7 @@
 %lang starknet
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
+from starkware.cairo.common.bool import TRUE, FALSE
 
 from src.forms import Question
 from src.forms import view_test_count
@@ -13,6 +14,9 @@ from src.forms import add_correct_answer
 from src.forms import points
 from src.forms import _get_answer_for_id
 from src.forms import view_question
+from src.forms import view_count_users_test
+from src.forms import view_user_test
+from starkware.starknet.common.syscalls import get_caller_address
 
 @external
 func test_sum{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
@@ -39,5 +43,12 @@ func test_sum{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}
     local array2 : felt* = new (3, 1)
     let (point) = points(test_id, 2, array2)
     assert point = 10
+
+    let (count_users) = view_count_users_test(test_id)
+    assert count_users = 1
+
+    let (user_test) = view_user_test(0)
+    assert user_test = TRUE
+
     return ()
 end

@@ -165,6 +165,14 @@ func view_questions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
 end
 
 @view
+func view_count_users_test{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    id_test : felt
+) -> (count_user : felt):
+    let (count) = count_users_test.read(id_test)
+    return (count)
+end
+
+@view
 func view_user_test{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     id_test : felt
 ) -> (bool : felt):
