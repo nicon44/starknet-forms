@@ -254,10 +254,10 @@ func _recurse_add_answers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, rang
     let (answer_correct) = answers_correct.read(id_test, idx)
 
     # obtain question
-    let (question : Question) = questions.read(id_test, idx)
-
+    # let (question : Question) = questions.read(id_test, idx)
     # obtain the correct answer
-    let (correct_answer) = _get_answer_for_id(question, answer_correct)
+    # let (correct_answer) = _get_answer_for_id(question, answer_correct)
+    
     tempvar answer_user : felt
     answer_user = cast([arr], felt)
 
@@ -268,7 +268,7 @@ func _recurse_add_answers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, rang
     local t
     # assert answer_user = 44
     # assert correct_answer = 44
-    if answer_user == correct_answer:
+    if answer_user == answer_correct:
         t = 5
     else:
         t = 0
