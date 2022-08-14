@@ -9,11 +9,12 @@ const WalletConnector = () => {
   return (
     <div>
       {!account ? (
+        available && available.length > 0 ?
         available.map((connector) => (
-          <Button key={connector.id()} onClick={() => connect(connector)}>
+          <Button className="ml-1" key={connector.id()} onClick={() => connect(connector)}>
             {`Connect ${connector.name()}`}
           </Button>
-        ))
+        )) : <span>No wallets found</span>
       ) : (
         <NavDropdown
           title={"0x..." + account.slice(account.length - 6)}

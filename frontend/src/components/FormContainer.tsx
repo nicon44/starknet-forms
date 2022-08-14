@@ -1,7 +1,7 @@
 import { useStarknetInvoke } from "@starknet-react/core";
 import { useState } from "react";
 import { useFormContract } from "../hooks/useFormContract";
-import Form from "./Form";
+import CompleteForm from "./Form";
 import FormSelector from "./FormSelector";
 
 const FormContainer = () => {
@@ -34,7 +34,7 @@ const FormContainer = () => {
     <div>
       {!formId && formId !== 0 && <FormSelector onSubmit={loadForm} />}
       {(formId || formId === 0) && (
-        <Form id={formId} onSubmit={submitHandler} />
+        <CompleteForm id={formId} onSubmit={submitHandler} />
       )}
     </div>
   );

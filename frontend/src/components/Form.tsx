@@ -1,10 +1,15 @@
 import { useStarknetCall } from "@starknet-react/core";
 import { useMemo, useState } from "react";
+import { Button, Form } from "react-bootstrap";
+import { Link } from "react-router-dom";
 import { useFormContract } from "../hooks/useFormContract";
 import IQuestion from "../model/question";
 import responseToString from "../utils/responseToString";
 
-const Form = (props: { id: number; onSubmit: (result: string) => void }) => {
+const CompleteForm = (props: {
+  id: number;
+  onSubmit: (result: string) => void;
+}) => {
   const { contract: test } = useFormContract();
 
   const { data: formResult } = useStarknetCall({
@@ -18,6 +23,7 @@ const Form = (props: { id: number; onSubmit: (result: string) => void }) => {
 
   useMemo(() => {
     if (formResult && formResult.length > 0) {
+      console.log(formResult);
       let form = [];
       if (formResult[0] instanceof Array) {
         for (let item of formResult[0]) {
@@ -38,7 +44,8 @@ const Form = (props: { id: number; onSubmit: (result: string) => void }) => {
     }
   }, [formResult]);
 
-  const handleSubmit = () => {
+  const handleSubmit = (event: any) => {
+    event.preventDefault();
     const result = form.map((item: IQuestion) => {
       return item.selectedOption;
     });
@@ -59,53 +66,62 @@ const Form = (props: { id: number; onSubmit: (result: string) => void }) => {
   return (
     <div>
       <h2>Form {props.id}</h2>
-
-      {form && form.length > 0 ? (
-        form?.map((question: IQuestion) => {
-          return (
-            <div key={question.description}>
-              <h2>{question.description}</h2>
-              <input
-                type="radio"
-                value={0}
-                name={question.id}
-                onChange={handleChange}
-              />
-              <label htmlFor={question.optionA}>{question.optionA}</label>
-              <br />
-              <input
-                type="radio"
-                value={1}
-                name={question.id}
-                onChange={handleChange}
-              />
-              <label htmlFor={question.optionB}>{question.optionB}</label>
-              <br />
-              <input
-                type="radio"
-                value={2}
-                name={question.id}
-                onChange={handleChange}
-              />
-              <label htmlFor={question.optionC}>{question.optionC}</label>
-              <br />
-              <input
-                type="radio"
-                value={3}
-                name={question.id}
-                onChange={handleChange}
-              />
-              <label htmlFor={question.optionD}>{question.optionD}</label>
-            </div>
-          );
-        })
-      ) : (
-        <p>No questions found</p>
-      )}
-      <br />
-      <button onClick={handleSubmit}>SUBMIT</button>
+      <Form onSubmit={handleSubmit}>
+        {form && form.length > 0 ? (
+          form?.map((question: IQuestion) => {
+            return (
+              <div key={question.description}>
+                <h3 className="mt-3">{question.description}</h3>
+                <Form.Check
+                  label={question.optionA}
+                  type="radio"
+                  value={0}
+                  name={question.id}
+                  onChange={handleChange}
+                />
+                <Form.Check
+                  label={question.optionB}
+                  type="radio"
+                  value={1}
+                  name={question.id}
+                  onChange={handleChange}
+                />
+                <Form.Check
+                  label={question.optionC}
+                  type="radio"
+                  value={2}
+                  name={question.id}
+                  onChange={handleChange}
+                />
+                <Form.Check
+                  label={question.optionD}
+                  type="radio"
+                  value={3}
+                  name={question.id}
+                  onChange={handleChange}
+                />
+              </div>
+            );
+          })
+        ) : (
+          <>
+            <p>
+              Form with id {props.id} was not found. Are you sure you inserted
+              the correct id?
+            </p>
+            <Link to="/">
+              <Button>Go Back</Button>
+            </Link>
+          </>
+        )}
+        {form && form.length > 0 && (
+          <Button className="mt-3" type="submit">
+            SUBMIT
+          </Button>
+        )}
+      </Form>
     </div>
   );
 };
 
-export default Form;
+export default CompleteForm;

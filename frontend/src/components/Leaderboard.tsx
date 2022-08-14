@@ -1,10 +1,9 @@
-import { useStarknetCall } from "@starknet-react/core";
+import { useStarknet, useStarknetCall } from "@starknet-react/core";
 import { useMemo, useState } from "react";
 import { useFormContract } from "../hooks/useFormContract";
 import './Leaderboard.css'
-const Leaderboard: React.FC<{ formId: number; account: any }> = ({
+const Leaderboard: React.FC<{ formId: number }> = ({
   formId,
-  account,
 }) => {
   const { contract: test } = useFormContract();
 
@@ -14,6 +13,7 @@ const Leaderboard: React.FC<{ formId: number; account: any }> = ({
     args: [formId],
     options: { watch: true },
   });
+  const { account } = useStarknet();
 
   const [leaderboard, setLeaderboard] = useState<Array<any>>([]);
 
