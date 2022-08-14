@@ -5,6 +5,7 @@ import CreateForm from "./CreateForm";
 import FormContainer from "./FormContainer";
 import Home from "./Home";
 import LeaderboardContainer from "./LeaderboardContainer";
+import'./Main.css';
 
 export default function Main() {
   const { account } = useStarknet();
@@ -19,7 +20,10 @@ export default function Main() {
           <Route path="/leaderboard" element={<LeaderboardContainer />} />
         </Routes>
       ) : (
-        <p>Please, connect your wallet to continue</p>
+        <>
+          <Home />
+          <p className="connect-warning mt-5">Please, connect your wallet to start using Starknet Forms</p>
+        </>
       )}
     </Container>
   );
