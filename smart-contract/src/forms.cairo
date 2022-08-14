@@ -141,12 +141,6 @@ func view_question_count{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
     return (count)
 end
 
-# @view
-# func view_answers_correct{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(id_test: felt, id_question: felt) -> (correct: felt):
-#     let (correct) = answers_correct.read(id_test, id_question)
-#     return (correct)
-# end
-
 @view
 func view_question{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     id_test : felt, id_question : felt
@@ -194,14 +188,6 @@ func view_points_user_test{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ran
     return (points)
 end
 
-# @view
-# func view_users_test_question_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-#     id_test: felt) -> (bool: felt):
-#     let (caller_address) = get_caller_address()
-#     let (bool) = users_tests.read(caller_address, id_test)
-#     return (bool)
-# end
-
 #
 # Externals
 #
@@ -216,16 +202,6 @@ func create_test{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     tests.write(id_test, Test(name, caller_address, TRUE))
     tests_count.write(id_test + 1)
     return (id_test)
-end
-
-@external
-func ready_test{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    id_test : felt
-) -> ():
-    assert_only_owner(id_test)
-    let (t : Test) = tests.read(id_test)
-    tests.write(id_test, Test(t.name, t.created_at, FALSE))
-    return ()
 end
 
 @external
@@ -268,6 +244,8 @@ func add_correct_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     let (count_question) = questions_count.read(id_test)
     _recurse_add_correct_answer(id_test, count_question, answers, 0)
 
+    let (t : Test) = tests.read(id_test)
+    tests.write(id_test, Test(t.name, t.created_at, FALSE))
 
     return ()
 end
@@ -340,30 +318,20 @@ func _recurse_add_answers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, rang
         return (0)
     end
 
-    # obtain id correct answer
     let (answer_correct) = correct_test_answers.read(id_test, idx)
 
-    # obtain question
-    # let (question : Question) = questions.read(id_test, idx)
-    # obtain the correct answer
-    # let (correct_answer) = _get_answer_for_id(question, answer_correct)
-    
     tempvar answer_user : felt
     answer_user = cast([arr], felt)
 
-    # save answer the user
     let (caller_address) = get_caller_address()
     answer_users_test.write(caller_address, id_test, idx, answer_user)
 
     local t
-    # assert answer_user = 44
-    # assert correct_answer = 44
     if answer_user == answer_correct:
         t = 5
     else:
         t = 0
     end
-    # assert t = 5
     let (local total) = _recurse_add_answers(id_test, len - 1, arr + 1, idx + 1)
     let res = t + total
     return (res)
