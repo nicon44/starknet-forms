@@ -2,3 +2,15 @@
   margin-top: 10px;
   margin-bottom: 3px;
 }
+
+.icon {
+  margin-left: 10px;
+  padding: 5px;
+  cursor: pointer;
+  border-radius: 5px;
+  border: 1px solid #eee;
+}
+
+.icon:hover {
+  background-color: #eee;
+}
