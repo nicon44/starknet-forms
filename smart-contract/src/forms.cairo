@@ -31,15 +31,11 @@ end
 # Storage
 #
 @storage_var
-func test(id_test : felt) -> (test : Test):
+func tests(id_test : felt) -> (test : Test):
 end
 
 @storage_var
-func test_count() -> (count : felt):
-end
-
-@storage_var
-func question_count(id_test : felt) -> (question_count : felt):
+func tests_count() -> (count : felt):
 end
 
 @storage_var
@@ -47,7 +43,11 @@ func questions(id_test : felt, id_question : felt) -> (question : Question):
 end
 
 @storage_var
-func answers_correct(id_test : felt, id_question : felt) -> (answers_correct : felt):
+func questions_count(id_test : felt) -> (questions_count : felt):
+end
+
+@storage_var
+func correct_test_answers(id_test : felt, id_question : felt) -> (correct_test_answer: felt):
 end
 
 @storage_var
@@ -55,11 +55,11 @@ func count_users_test(id_test : felt) -> (count_users : felt):
 end
 
 @storage_var
-func users_test(user_address : felt, id_test : felt) -> (bool : felt):
+func check_users_test(user_address : felt, id_test : felt) -> (bool : felt):
 end
 
 @storage_var
-func users_test_question_answer(user_address : felt, id_test : felt, id_question : felt) -> (
+func answer_users_test(user_address : felt, id_test : felt, id_question : felt) -> (
     answer : felt
 ):
 end
@@ -77,7 +77,7 @@ func assert_only_owner{
     pedersen_ptr : HashBuiltin*,
     range_check_ptr
 }(id_test: felt):
-    let (t : Test) = test.read(id_test)
+    let (t : Test) = tests.read(id_test)
     let (caller) = get_caller_address()
     with_attr error_message("Ownable: caller is not the owner"):
         assert t.created_at = caller
@@ -90,7 +90,7 @@ func test_open{
     pedersen_ptr : HashBuiltin*,
     range_check_ptr
 }(id_test: felt):
-    let (t : Test) = test.read(id_test)
+    let (t : Test) = tests.read(id_test)
     with_attr error_message("Test: is closed"):
         assert t.open = TRUE
     end
@@ -102,7 +102,7 @@ func test_closed{
     pedersen_ptr : HashBuiltin*,
     range_check_ptr
 }(id_test: felt):
-    let (t : Test) = test.read(id_test)
+    let (t : Test) = tests.read(id_test)
     with_attr error_message("Test: is open"):
         assert t.open = FALSE
     end
@@ -117,7 +117,7 @@ end
 func view_test{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     id_test : felt
 ) -> (test : Test):
-    let (res : Test) = test.read(id_test)
+    let (res : Test) = tests.read(id_test)
     return (res)
 end
 
@@ -125,7 +125,7 @@ end
 func view_test_count{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
     count : felt
 ):
-    let (count) = test_count.read()
+    let (count) = tests_count.read()
     return (count)
 end
 
@@ -133,7 +133,7 @@ end
 func view_question_count{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     id_test : felt
 ) -> (bet_count : felt):
-    let (count) = question_count.read(id_test)
+    let (count) = questions_count.read(id_test)
     return (count)
 end
 
@@ -158,7 +158,7 @@ func view_questions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
     alloc_locals
 
     let (records : Question*) = alloc()
-    let (count_question) = question_count.read(id_test)
+    let (count_question) = questions_count.read(id_test)
     _recurse_view_solution_records(id_test, count_question, records, 0)
 
     return (count_question, records)
@@ -177,7 +177,7 @@ func view_user_test{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
     id_test : felt
 ) -> (bool : felt):
     let (caller_address) = get_caller_address()
-    let (bool) = users_test.read(caller_address, id_test)
+    let (bool) = check_users_test.read(caller_address, id_test)
     return (bool)
 end
 
@@ -185,7 +185,7 @@ end
 # func view_users_test_question_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
 #     id_test: felt) -> (bool: felt):
 #     let (caller_address) = get_caller_address()
-#     let (bool) = users_test.read(caller_address, id_test)
+#     let (bool) = users_tests.read(caller_address, id_test)
 #     return (bool)
 # end
 
@@ -198,10 +198,10 @@ func create_test{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     name : felt
 ) -> (id_test : felt):
 
-    let (id_test) = test_count.read()
+    let (id_test) = tests_count.read()
     let (caller_address) = get_caller_address()
-    test.write(id_test, Test(name, caller_address, TRUE))
-    test_count.write(id_test + 1)
+    tests.write(id_test, Test(name, caller_address, TRUE))
+    tests_count.write(id_test + 1)
     return (id_test)
 end
 
@@ -210,8 +210,8 @@ func ready_test{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_pt
     id_test : felt
 ) -> ():
     assert_only_owner(id_test)
-    let (t : Test) = test.read(id_test)
-    test.write(id_test, Test(t.name, t.created_at, FALSE))
+    let (t : Test) = tests.read(id_test)
+    tests.write(id_test, Test(t.name, t.created_at, FALSE))
     return ()
 end
 
@@ -228,7 +228,7 @@ func add_question{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
     assert_only_owner(id_test)
     test_open(id_test)
 
-    let (id_question) = question_count.read(id_test)
+    let (id_question) = questions_count.read(id_test)
     questions.write(
         id_test,
         id_question,
@@ -240,7 +240,7 @@ func add_question{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
         optionD
         ),
     )
-    question_count.write(id_test, id_question + 1)
+    questions_count.write(id_test, id_question + 1)
 
     return (id_question)
 end
@@ -252,7 +252,7 @@ func add_correct_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     assert_only_owner(id_test)
     test_open(id_test)
 
-    let (count_question) = question_count.read(id_test)
+    let (count_question) = questions_count.read(id_test)
     _recurse_add_correct_answer(id_test, count_question, answers, 0)
 
 
@@ -266,11 +266,11 @@ func points{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
 
     test_closed(id_test)
 
-    let (count_question) = question_count.read(id_test)
+    let (count_question) = questions_count.read(id_test)
     let (point) = _recurse_add_answers(id_test, count_question, answers, 0)
     
     let (caller_address) = get_caller_address()
-    users_test.write(caller_address, id_test, TRUE)
+    check_users_test.write(caller_address, id_test, TRUE)
     
     let (count_users) = count_users_test.read(id_test)
     count_users_test.write(id_test, count_users + 1)
@@ -311,7 +311,7 @@ func _recurse_add_correct_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin
         return ()
     end
 
-    answers_correct.write(id_test, idx, arr[idx])
+    correct_test_answers.write(id_test, idx, arr[idx])
 
     _recurse_add_correct_answer(id_test, len, arr, idx + 1)
     return ()
@@ -326,7 +326,7 @@ func _recurse_add_answers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, rang
     end
 
     # obtain id correct answer
-    let (answer_correct) = answers_correct.read(id_test, idx)
+    let (answer_correct) = correct_test_answers.read(id_test, idx)
 
     # obtain question
     # let (question : Question) = questions.read(id_test, idx)
@@ -338,7 +338,7 @@ func _recurse_add_answers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, rang
 
     # save answer the user
     let (caller_address) = get_caller_address()
-    users_test_question_answer.write(caller_address, id_test, idx, answer_user)
+    answer_users_test.write(caller_address, id_test, idx, answer_user)
 
     local t
     # assert answer_user = 44
