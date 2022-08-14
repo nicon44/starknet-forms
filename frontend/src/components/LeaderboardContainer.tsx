@@ -3,7 +3,7 @@ import { useFormContract } from "../hooks/useFormContract";
 import FormSelector from "./FormSelector";
 import Leaderboard from "./Leaderboard";
 
-const LeaderboardContainer: React.FC<{ account: any }> = ({ account }) => {
+const LeaderboardContainer: React.FC = () => {
   const [formId, setFormId] = useState<number | null>(null);
   const { contract: test } = useFormContract();
 
@@ -17,7 +17,7 @@ const LeaderboardContainer: React.FC<{ account: any }> = ({ account }) => {
 
       {!formId && formId !== 0 && <FormSelector onSubmit={loadForm} />}
       {(formId || formId === 0) && (
-        <Leaderboard formId={formId} account={account} />
+        <Leaderboard formId={formId} />
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import { useStarknet } from "@starknet-react/core";
+import { Container } from "react-bootstrap";
 import { Route, Routes } from "react-router-dom";
 import CreateForm from "./CreateForm";
 import FormContainer from "./FormContainer";
@@ -9,20 +10,17 @@ export default function Main() {
   const { account } = useStarknet();
 
   return (
-    <div className="container">
+    <Container className="mt-3">
       {account ? (
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/complete-form" element={<FormContainer />} />
           <Route path="/create-form" element={<CreateForm />} />
-          <Route
-            path="/leaderboard"
-            element={<LeaderboardContainer account={account} />}
-          />
+          <Route path="/leaderboard" element={<LeaderboardContainer />} />
         </Routes>
       ) : (
         <p>Please, connect your wallet to continue</p>
       )}
-    </div>
+    </Container>
   );
 }
