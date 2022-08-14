@@ -51,6 +51,10 @@ func answers_correct(id_test : felt, id_question : felt) -> (answers_correct : f
 end
 
 @storage_var
+func count_users_test(id_test : felt) -> (count_users : felt):
+end
+
+@storage_var
 func users_test(user_address : felt, id_test : felt) -> (bool : felt):
 end
 
@@ -187,8 +191,7 @@ func add_correct_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
 ) -> ():
     let (count_question) = question_count.read(id_test)
     _recurse_add_correct_answer(id_test, count_question, answers, 0)
-    let (caller_address) = get_caller_address()
-    users_test.write(caller_address, id_test, TRUE)
+
 
     return ()
 end
@@ -199,6 +202,12 @@ func points{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
 ) -> (point : felt):
     let (count_question) = question_count.read(id_test)
     let (point) = _recurse_add_answers(id_test, count_question, answers, 0)
+    
+    let (caller_address) = get_caller_address()
+    users_test.write(caller_address, id_test, TRUE)
+    
+    let (count_users) = count_users_test.read(id_test)
+    count_users_test.write(id_test, count_users + 1)
 
     return (point)
 end
