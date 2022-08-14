@@ -59,6 +59,10 @@ func check_users_test(user_address : felt, id_test : felt) -> (bool : felt):
 end
 
 @storage_var
+func points_users_test(user_address : felt, id_test : felt) -> (points : felt):
+end
+
+@storage_var
 func answer_users_test(user_address : felt, id_test : felt, id_question : felt) -> (
     answer : felt
 ):
@@ -181,6 +185,15 @@ func view_user_test{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
     return (bool)
 end
 
+@view
+func view_points_user_test{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    id_test : felt
+) -> (points : felt):
+    let (caller_address) = get_caller_address()
+    let (points) = points_users_test.read(caller_address, id_test)
+    return (points)
+end
+
 # @view
 # func view_users_test_question_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
 #     id_test: felt) -> (bool: felt):
@@ -224,7 +237,7 @@ func add_question{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
     optionC : felt,
     optionD : felt,
 ) -> (id_question : felt):
-    
+
     assert_only_owner(id_test)
     test_open(id_test)
 
@@ -260,22 +273,24 @@ func add_correct_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
 end
 
 @view
-func points{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func send_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     id_test : felt, answers_len : felt, answers : felt*
-) -> (point : felt):
+) -> ():
 
     test_closed(id_test)
 
     let (count_question) = questions_count.read(id_test)
     let (point) = _recurse_add_answers(id_test, count_question, answers, 0)
-    
+
+
     let (caller_address) = get_caller_address()
+    points_users_test.write(caller_address, id_test, point)
     check_users_test.write(caller_address, id_test, TRUE)
-    
+
     let (count_users) = count_users_test.read(id_test)
     count_users_test.write(id_test, count_users + 1)
 
-    return (point)
+    return ()
 end
 
 #
