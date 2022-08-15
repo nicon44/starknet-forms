@@ -12,6 +12,8 @@ We deployed this app in a public heroku server. It is available at https://stark
 
 Demo video: https://www.youtube.com/watch?v=w4vnY9FFx_I
 
+Contract: https://goerli.voyager.online/contract/0x03f81418d4249a81e89f5b85a21ed8eceb327450c8006a03981df5a905ad85ad
+
 # Roles and form status
 
 The forms can have 3 status:
