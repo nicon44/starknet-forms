@@ -1,6 +1,7 @@
 # Starknet Forms
 
 Welcome to Starknet Forms. This is a Google Forms like project built using blockchain technology.
+
 Using this dApp you can create a multiple choice form / test and share it with other users who can complete it. Then, scores for each user are calculated in a descentralized and transparent way.
 
 # Public server
@@ -21,14 +22,14 @@ The forms can have 3 status:
 
 We identified two roles: 
 
-  1. The owner, who can:
+1. The owner, who can:
     * Create form
     * View forms
     * Edit form
     * Set form to ready
     * Close form (calculate scores)
 
-  2. The users, who can:
+2. The users, who can:
     * Complete form
     * View results on the forms they participated
 
@@ -41,12 +42,14 @@ We identified two roles:
 
 The structure of a question is the following:
 
+```
 Question
   optionA
   optionB
   optionC
   optionD
   option_correct
+```
 
 The problem with this, is that we cannot store the correct option as plain text in the contract, as it is public.
 That is why we introduced a secret combined with hashing.
@@ -58,6 +61,7 @@ Note: For hashing, we are using the function hash.pedersen() available both in C
 
 Apart from saving the hashed secret in the form, the question structure becomes:
 
+```
 struct Question:
     member description: felt
     member optionA: felt
@@ -66,8 +70,9 @@ struct Question:
     member optionD: felt
     member option_correct_hash: felt
 end
+```
 
-Where 'option_correct_hash' is hash.pedersen([correctOption, secret])
+Where 'option_correct_hash' is `hash.pedersen([correctOption, secret])`
 
 Every time the owner wants to edit the form, he will need to introduce the correct secret again. Having the secret and the questions stored in the smart contract, the frontend can figure out the correct option, using hash.pedersen and comparing the result of every posible solution.
 
