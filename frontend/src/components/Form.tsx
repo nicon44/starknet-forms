@@ -8,7 +8,7 @@ import responseToString from "../utils/responseToString";
 
 const CompleteForm = (props: {
   id: number;
-  onSubmit: (result: string) => void;
+  onSubmit: (nickname: string, result: string) => void;
 }) => {
   const { contract: test } = useFormContract();
 
@@ -20,10 +20,10 @@ const CompleteForm = (props: {
   });
 
   const [form, setForm] = useState<any>();
+  const [nickname, setNickname] = useState('')
 
   useMemo(() => {
     if (formResult && formResult.length > 0) {
-      console.log(formResult);
       let form = [];
       if (formResult[0] instanceof Array) {
         for (let item of formResult[0]) {
@@ -49,7 +49,7 @@ const CompleteForm = (props: {
     const result = form.map((item: IQuestion) => {
       return item.selectedOption;
     });
-    props.onSubmit(result);
+    props.onSubmit(nickname, result);
   };
 
   const handleChange = (event: any) => {
@@ -63,10 +63,24 @@ const CompleteForm = (props: {
     });
   };
 
+  const handleNameChange = (event:any) => {
+    setNickname(event.target.value)
+  }
+
   return (
     <div>
       <h2>Form {props.id}</h2>
       <Form onSubmit={handleSubmit}>
+        {form && form.length > 0 && (
+          <>
+            <Form.Label>Your name *</Form.Label>
+            <Form.Control
+              type="text"
+              required
+              onChange={handleNameChange}
+            />
+          </>
+        )}
         {form && form.length > 0 ? (
           form?.map((question: IQuestion) => {
             return (

@@ -9,7 +9,7 @@ const Leaderboard: React.FC<{ formId: number }> = ({
 
   const { data: leaderboardResult } = useStarknetCall({
     contract: test,
-    method: "view_score_test",
+    method: "view_score_form",
     args: [formId],
     options: { watch: true },
   });

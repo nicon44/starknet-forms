@@ -1,13 +1,17 @@
 import { useStarknetInvoke } from "@starknet-react/core";
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import { useFormContract } from "../hooks/useFormContract";
+import stringToHex from "../utils/stringToHex";
 import CompleteForm from "./Form";
 import FormSelector from "./FormSelector";
 
 const FormContainer = () => {
-  const [formId, setFormId] = useState<number | null>(null);
+  const {id} = useParams();
+  const initId = id ? +id : undefined;
+  const [formId, setFormId] = useState<number | undefined>(initId);
   const { contract: test } = useFormContract();
-  const { data, loading, error, reset, invoke } = useStarknetInvoke({
+  const { invoke } = useStarknetInvoke({
     contract: test,
     method: "send_answer",
   });
@@ -16,13 +20,11 @@ const FormContainer = () => {
     setFormId(id);
   };
 
-  const submitHandler = (result: string) => {
-    const args = [formId, result];
-    console.log('args',args)
+  const submitHandler = (nickname: string, result: string) => {
+    const args = [formId, stringToHex(nickname), result];
     invoke({ args })
       .then((response) => {
-        console.log(response);
-        setFormId(null);
+        setFormId(undefined);
       })
       .catch((e) => {
         alert("Error");
