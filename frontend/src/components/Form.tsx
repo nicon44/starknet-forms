@@ -23,7 +23,6 @@ const CompleteForm = (props: {
 
   useMemo(() => {
     if (formResult && formResult.length > 0) {
-      console.log(formResult);
       let form = [];
       if (formResult[0] instanceof Array) {
         for (let item of formResult[0]) {

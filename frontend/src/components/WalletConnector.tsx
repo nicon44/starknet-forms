@@ -59,6 +59,8 @@ const WalletConnectorModal = (props: any) => {
     available && available.find((connector) => connector.id() === "argent-x");
   const braavos =
     available && available.find((connector) => connector.id() === "braavos");
+  const others =
+    available && available.filter((connector) => connector.id() !== "braavos" && connector.id() !== "argent-x");
   const connectWallet = (connector: any) => () => {
     connect(connector);
     localStorage.setItem(LS_WALLET, connector.options?.id);
@@ -76,7 +78,7 @@ const WalletConnectorModal = (props: any) => {
           Connect a wallet
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body className="modal-body">
+      <Modal.Body className="wallet-modal-body">
         <div className="wallets">
           <div
             onClick={connectWallet(argentX)}
@@ -92,9 +94,26 @@ const WalletConnectorModal = (props: any) => {
             <img src="braavos.jpeg" alt="Argent X" />
             <span>Braavos</span>
           </div>
+          {others &&
+            others.length > 0 &&
+            others.map((connector) => {
+              return (
+                <div
+                  key={connector.id()}
+                  onClick={connectWallet(connector)}
+                  className="wallet"
+                >
+                  <img src="unknown.png" alt="Unknown wallet" />
+                  <span>{connector.name()}</span>
+                </div>
+              );
+            })}
         </div>
         {!argentX && !braavos && (
-          <p className="center mt-3">No wallets found <br />Please install one of the above to continue</p>
+          <p className="center mt-3">
+            No wallets found <br />
+            Please install one of the above to continue
+          </p>
         )}
       </Modal.Body>
     </Modal>

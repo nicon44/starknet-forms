@@ -5,20 +5,15 @@ import {
   useStarknetTransactionManager,
 } from "@starknet-react/core";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Badge,
-  Button,
-  Form,
-  Modal,
-  OverlayTrigger,
-  Tooltip,
-} from "react-bootstrap";
+import { Button, OverlayTrigger, Tooltip } from "react-bootstrap";
 import Table from "react-bootstrap/Table";
 import { FaCheck, FaShareAlt, FaTimes } from "react-icons/fa";
 import { TailSpin } from "react-loader-spinner";
 import { useFormContract } from "../hooks/useFormContract";
 import responseToString from "../utils/responseToString";
-import './MyForms.css';
+import CloseModal from "./CloseModal";
+import "./MyForms.css";
+import ShareModal from "./ShareModal";
 
 interface FormRow {
   id: number;
@@ -32,6 +27,7 @@ const MyForms = () => {
 
   const [myForms, setMyForms] = useState<FormRow[]>([]);
   const [shareModalId, setShareModalId] = useState<number | null>(null);
+  const [closeModalId, setCloseModalId] = useState<number | null>(null);
 
   const { data: myFormsResult } = useStarknetCall({
     contract: test,
@@ -45,10 +41,7 @@ const MyForms = () => {
     method: "forms_change_status_ready",
   });
 
-  const { invoke: invokeClose } = useStarknetInvoke({
-    contract: test,
-    method: "close_forms",
-  });
+
 
   const { transactions } = useStarknetTransactionManager();
 
@@ -61,6 +54,7 @@ const MyForms = () => {
           item.transaction &&
           item.transaction.type === "INVOKE_FUNCTION" &&
           item.status &&
+          item.status !== "ACCEPTED_ON_L1" &&
           item.status !== "ACCEPTED_ON_L2" &&
           item.status !== "REJECTED"
       )
@@ -91,13 +85,9 @@ const MyForms = () => {
       alert("There was an error in the transaction");
     });
   };
+
   const closeHandler = (id: number) => () => {
-    const payload = {
-      args: [id],
-    };
-    invokeClose(payload).catch((e) => {
-      alert("There was an error in the transaction");
-    });
+    setCloseModalId(id)
   };
 
   const showShareModal = (id: number) => () => {
@@ -199,7 +189,7 @@ const MyForms = () => {
       {pendingTransactions.map((transaction) => {
         return (
           <p key={transaction.transactionHash}>
-            There's an unfinished transaction with status {transaction.status}
+            There is an unfinished transaction with status {transaction.status}
           </p>
         );
       })}
@@ -212,61 +202,32 @@ const MyForms = () => {
           ariaLabel="loading"
         />
       )}
-      <h5 className="mt-3">Reference</h5>
-      <p>
-        A form in state <span className="badge rounded-pill OPEN">OPEN</span>{" "}
-        can be edited. <br />
-        A form in state <span className="badge rounded-pill READY">READY</span>{" "}
-        can be shared and completed by other users. <br />
-        When a form is <span className="badge rounded-pill CLOSED">CLOSED</span>{" "}
-        results are calculated. <br />
-      </p>
+      {myForms.length > 0 && (
+        <>
+          <h5 className="mt-5">Reference</h5>
+          <p>
+            A form in state{" "}
+            <span className="badge rounded-pill OPEN">OPEN</span> can be edited.
+            <br />A form in state{" "}
+            <span className="badge rounded-pill READY">READY</span> can be
+            shared and completed by other users. <br />
+            When a form is{" "}
+            <span className="badge rounded-pill CLOSED">CLOSED</span> results
+            are calculated. <br />
+          </p>
+        </>
+      )}
       <ShareModal
         id={shareModalId}
-        show={!!shareModalId}
+        show={shareModalId === 0 || !!shareModalId}
         onHide={() => setShareModalId(null)}
       />
+      <CloseModal
+        id={closeModalId}
+        show={closeModalId === 0 || !!closeModalId}
+        onHide={() => setCloseModalId(null)}
+      />
     </>
-  );
-};
-
-const ShareModal = (props: any) => {
-  const link = window.location.origin + "/complete-form/" + props.id;
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    setCopied(false);
-  }, [link]);
-
-  const handleCopy = () => {
-    setCopied(true);
-    navigator.clipboard.writeText(link);
-  };
-
-  return (
-    <Modal
-      {...props}
-      size="md"
-      aria-labelledby="contained-modal-title-vcenter"
-      centered
-    >
-      <Modal.Header closeButton>
-        <Modal.Title id="contained-modal-title-vcenter">
-          Share form {props.id}
-        </Modal.Title>
-      </Modal.Header>
-      <Modal.Body className="modal-body">
-        <Form.Control type="text" value={link} disabled />
-      </Modal.Body>
-      <Modal.Footer>
-        <Button onClick={props.onHide} variant="secondary">
-          Close
-        </Button>
-        <Button onClick={handleCopy} disabled={copied} variant="primary">
-          {copied ? "Copied" : "Copy link to clipboard"}
-        </Button>
-      </Modal.Footer>
-    </Modal>
   );
 };
 

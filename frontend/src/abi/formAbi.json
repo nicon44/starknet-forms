@@ -20,10 +20,20 @@
                 "name": "status",
                 "offset": 3,
                 "type": "felt"
+            },
+            {
+                "name": "secret_hash",
+                "offset": 4,
+                "type": "felt"
+            },
+            {
+                "name": "secret",
+                "offset": 5,
+                "type": "felt"
             }
         ],
         "name": "Form",
-        "size": 4,
+        "size": 6,
         "type": "struct"
     },
     {
@@ -52,10 +62,15 @@
                 "name": "optionD",
                 "offset": 4,
                 "type": "felt"
+            },
+            {
+                "name": "option_correct_hash",
+                "offset": 5,
+                "type": "felt"
             }
         ],
-        "name": "QuestionDto",
-        "size": 5,
+        "name": "Question",
+        "size": 6,
         "type": "struct"
     },
     {
@@ -78,43 +93,6 @@
         ],
         "name": "Row",
         "size": 3,
-        "type": "struct"
-    },
-    {
-        "members": [
-            {
-                "name": "description",
-                "offset": 0,
-                "type": "felt"
-            },
-            {
-                "name": "optionA",
-                "offset": 1,
-                "type": "felt"
-            },
-            {
-                "name": "optionB",
-                "offset": 2,
-                "type": "felt"
-            },
-            {
-                "name": "optionC",
-                "offset": 3,
-                "type": "felt"
-            },
-            {
-                "name": "optionD",
-                "offset": 4,
-                "type": "felt"
-            },
-            {
-                "name": "optionCorrect",
-                "offset": 5,
-                "type": "felt"
-            }
-        ],
-        "name": "Question",
-        "size": 6,
         "type": "struct"
     },
     {
@@ -225,7 +203,7 @@
             },
             {
                 "name": "records",
-                "type": "QuestionDto*"
+                "type": "Question*"
             }
         ],
         "stateMutability": "view",
@@ -312,22 +290,6 @@
             {
                 "name": "name",
                 "type": "felt"
-            }
-        ],
-        "name": "create_form",
-        "outputs": [
-            {
-                "name": "id_form",
-                "type": "felt"
-            }
-        ],
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "name": "name",
-                "type": "felt"
             },
             {
                 "name": "dquestions_len",
@@ -339,6 +301,10 @@
             },
             {
                 "name": "status_open",
+                "type": "felt"
+            },
+            {
+                "name": "secret_hash",
                 "type": "felt"
             }
         ],
@@ -349,29 +315,6 @@
                 "type": "felt"
             }
         ],
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "name": "id_form",
-                "type": "felt"
-            },
-            {
-                "name": "dquestions_len",
-                "type": "felt"
-            },
-            {
-                "name": "dquestions",
-                "type": "Question*"
-            },
-            {
-                "name": "status_open",
-                "type": "felt"
-            }
-        ],
-        "name": "add_questions",
-        "outputs": [],
         "type": "function"
     },
     {
@@ -412,6 +355,10 @@
         "inputs": [
             {
                 "name": "id_form",
+                "type": "felt"
+            },
+            {
+                "name": "secret",
                 "type": "felt"
             }
         ],

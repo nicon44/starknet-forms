@@ -1,30 +1,22 @@
-import {
-  useStarknetInvoke,
-  useStarknetTransactionManager,
-} from "@starknet-react/core";
-import { useEffect, useState } from "react";
-import { useFormContract } from "../hooks/useFormContract";
-import convertCorrectOption from "../utils/convertCorrectOption";
-import responseToString from "../utils/responseToString";
-import stringToHex from "../utils/stringToHex";
+import { useStarknetInvoke } from "@starknet-react/core";
+import { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
-import "./CreateForm.css";
-import { FaTrashAlt, FaEdit } from "react-icons/fa";
+import { FaEdit, FaTrashAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { hash } from "starknet";
+import { useFormContract } from "../hooks/useFormContract";
+import convertCorrectOption from "../utils/convertCorrectOption";
+import stringToHex from "../utils/stringToHex";
+import "./CreateForm.css";
 
 const CreateForm = () => {
   const { contract: test } = useFormContract();
   const { invoke: invokeCreateAndAdd } = useStarknetInvoke({
     contract: test,
     method: "create_form_add_questions",
-  });
-
-  const { invoke: invokeCreateEmpty } = useStarknetInvoke({
-    contract: test,
-    method: "create_form",
   });
 
   const [description, setDescription] = useState("");
@@ -34,6 +26,8 @@ const CreateForm = () => {
   const [optionD, setOptionD] = useState("");
   const [optionCorrect, setOptionCorrect] = useState<number | null>(null);
   const [name, setName] = useState("");
+  const [secret, setSecret] = useState("");
+  const [readySwitch, setReadySwitch] = useState(true);
 
   const [questions, setQuestions] = useState<Array<any>>([]);
 
@@ -46,21 +40,23 @@ const CreateForm = () => {
     setOptionCorrect(+value);
   };
 
+  const handleSwitchChange = (event: any) => {
+    const value = event.target.checked;
+    setReadySwitch(value);
+  };
+
   const handleSubmit = (event: any) => {
     event.preventDefault();
-    const payload =
-      questions.length === 0
-        ? {
-            args: [stringToHex(name)],
-          }
-        : {
-            args: [stringToHex(name), hexQuestions(), 0],
-          };
+    const payload = {
+      args: [
+        stringToHex(name),
+        hexQuestions(),
+        readySwitch ? 0 : 1,
+        hash.pedersen([stringToHex(secret), 0]),
+      ],
+    };
 
-    const invokeFunction =
-      questions.length === 0 ? invokeCreateEmpty : invokeCreateAndAdd;
-
-    invokeFunction(payload)
+    invokeCreateAndAdd(payload)
       .then(() => {
         navigate("/my-forms");
       })
@@ -68,8 +64,6 @@ const CreateForm = () => {
         alert("There was an error in the transaction. Please try again");
         console.log("error", e);
       });
-
-    // get transaction, get id and show form link
   };
 
   const hexQuestions = () => {
@@ -81,9 +75,28 @@ const CreateForm = () => {
         optionB: stringToHex(question.optionB),
         optionC: stringToHex(question.optionC),
         optionD: stringToHex(question.optionD),
-        optionCorrect: question.optionCorrect,
+        option_correct_hash: getOptionCorrectHash(question),
       };
     });
+  };
+
+  const getOptionCorrectHash = (question: any) => {
+    let correctOption;
+    switch (question.optionCorrect) {
+      case 0:
+        correctOption = stringToHex(question.optionA);
+        break;
+        case 1:
+        correctOption = stringToHex(question.optionB);
+        break;
+        case 2:
+        correctOption = stringToHex(question.optionC);
+        break;
+        case 3:
+        correctOption = stringToHex(question.optionD);
+        break;
+    }
+    return hash.pedersen([correctOption, stringToHex(secret)]);
   };
 
   const handleInputChange = (event: any, setFunction: any) => {
@@ -160,7 +173,7 @@ const CreateForm = () => {
         <Col md="8">
           <h4>Your form:</h4>
           <Form onSubmit={handleSubmit}>
-            <Form.Label>Name: </Form.Label>
+            <Form.Label>Name *</Form.Label>
             <Form.Control
               type="text"
               required
@@ -194,13 +207,38 @@ const CreateForm = () => {
                   </div>
                 );
               })}
+            <Form.Label>Secret *</Form.Label>
+            <Form.Control
+              type="text"
+              required
+              onChange={(event) => handleInputChange(event, setSecret)}
+            />
+            <Form.Text className="text-muted">
+              Please enter a password to sign your form. You will need this to
+              update or close the form later. Do not forget it!
+            </Form.Text>
+            <Form.Check
+              className="mt-3"
+              type="switch"
+              label="Set form to READY"
+              checked={readySwitch}
+              onChange={handleSwitchChange}
+            />
+            <Form.Text className="text-muted">
+              {readySwitch
+                ? "This form will be set to READY. This means you will not be able to update it and other users will be able to complete it right away."
+                : "This form will stay OPEN. This means you will be able to update it later."}
+            </Form.Text>
             {questions.length === 0 && (
-              <div className="mt-3">
-                <Button type="submit">CREATE EMPTY FORM</Button>
-                <span className="ml-1">or add new questions</span>
-              </div>
+              <p className="mt-5">
+                You need to add questions to create a form.
+              </p>
             )}
-            {questions.length > 0 && <Button type="submit">CREATE FORM</Button>}
+            <div className="mt-3">
+              <Button disabled={questions.length === 0} type="submit">
+                CREATE FORM
+              </Button>
+            </div>
           </Form>
         </Col>
         <Col md="4">
