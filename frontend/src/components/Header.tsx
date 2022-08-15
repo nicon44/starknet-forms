@@ -21,13 +21,13 @@ const Header = () => {
                   Home
                 </Nav.Link>
                 <Nav.Link as={Link} to="/complete-form">
-                  Complete Form
+                  Complete form
                 </Nav.Link>
                 <Nav.Link as={Link} to="/create-form">
-                  Create Form
+                  Create form
                 </Nav.Link>
-                <Nav.Link as={Link} to="/leaderboard">
-                  Leaderboard
+                <Nav.Link as={Link} to="/my-forms">
+                  My forms
                 </Nav.Link>
               </>
             )}

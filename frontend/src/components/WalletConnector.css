@@ -1,0 +1,40 @@
+.wallets {
+  display: flex;
+}
+
+.wallet {
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+  margin-right: 20px;
+  text-align: center;
+  align-items: center;
+  border-radius: 15px;
+  border: 2px solid white;
+  cursor: pointer;
+}
+
+.wallet:hover {
+  border: 2px solid rgb(200, 200, 200);
+}
+
+.wallet img {
+  width: 64px;
+}
+
+.wallet span {
+  font-size: 20px;
+  font-weight: 500;
+  margin-top: 5px;
+}
+
+.not-found {
+  opacity: 0.5;
+  cursor:not-allowed;
+}
+
+.modal-body {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}

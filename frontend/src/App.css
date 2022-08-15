@@ -5,3 +5,26 @@
 .ml-1 {
   margin-left: 5px;
 }
+.mr-1 {
+  margin-right: 5px;
+}
+
+.center {
+  text-align: center;
+}
+
+.OPEN {
+  background-color: #6c757d !important;
+}
+
+.READY {
+  background-color: #198754 !important;
+}
+
+.CLOSE, .CLOSED {
+  background-color: #dc3545 !important;
+}
+
+.badge {
+  padding: 6px 12px !important;
+}

@@ -2,18 +2,28 @@
     {
         "members": [
             {
-                "name": "name",
+                "name": "id",
                 "offset": 0,
                 "type": "felt"
             },
             {
-                "name": "created_at",
+                "name": "name",
                 "offset": 1,
+                "type": "felt"
+            },
+            {
+                "name": "created_at",
+                "offset": 2,
+                "type": "felt"
+            },
+            {
+                "name": "status",
+                "offset": 3,
                 "type": "felt"
             }
         ],
-        "name": "Test",
-        "size": 2,
+        "name": "Form",
+        "size": 4,
         "type": "struct"
     },
     {
@@ -56,13 +66,18 @@
                 "type": "felt"
             },
             {
-                "name": "score",
+                "name": "nickname",
                 "offset": 1,
+                "type": "felt"
+            },
+            {
+                "name": "score",
+                "offset": 2,
                 "type": "felt"
             }
         ],
         "name": "Row",
-        "size": 2,
+        "size": 3,
         "type": "struct"
     },
     {
@@ -105,18 +120,18 @@
     {
         "data": [
             {
-                "name": "id_test",
+                "name": "id_form",
                 "type": "felt"
             }
         ],
         "keys": [],
-        "name": "TestCreated",
+        "name": "FormCreated",
         "type": "event"
     },
     {
         "data": [
             {
-                "name": "id_test",
+                "name": "id_form",
                 "type": "felt"
             },
             {
@@ -131,15 +146,53 @@
     {
         "inputs": [
             {
-                "name": "id_test",
+                "name": "id_form",
                 "type": "felt"
             }
         ],
-        "name": "view_test",
+        "name": "view_form",
         "outputs": [
             {
-                "name": "test",
-                "type": "Test"
+                "name": "form",
+                "type": "Form"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "user_address",
+                "type": "felt"
+            }
+        ],
+        "name": "view_count_forms_by_user",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "user_address",
+                "type": "felt"
+            }
+        ],
+        "name": "view_my_forms",
+        "outputs": [
+            {
+                "name": "records_len",
+                "type": "felt"
+            },
+            {
+                "name": "records",
+                "type": "Form*"
             }
         ],
         "stateMutability": "view",
@@ -147,7 +200,7 @@
     },
     {
         "inputs": [],
-        "name": "view_test_count",
+        "name": "view_form_count",
         "outputs": [
             {
                 "name": "count",
@@ -160,7 +213,7 @@
     {
         "inputs": [
             {
-                "name": "id_test",
+                "name": "id_form",
                 "type": "felt"
             }
         ],
@@ -181,7 +234,7 @@
     {
         "inputs": [
             {
-                "name": "id_test",
+                "name": "id_form",
                 "type": "felt"
             }
         ],
@@ -198,11 +251,11 @@
     {
         "inputs": [
             {
-                "name": "id_test",
+                "name": "id_form",
                 "type": "felt"
             }
         ],
-        "name": "view_users_test_count",
+        "name": "view_users_form_count",
         "outputs": [
             {
                 "name": "count_user",
@@ -215,11 +268,11 @@
     {
         "inputs": [
             {
-                "name": "id_test",
+                "name": "id_form",
                 "type": "felt"
             }
         ],
-        "name": "view_score_test",
+        "name": "view_score_form",
         "outputs": [
             {
                 "name": "records_len",
@@ -236,6 +289,43 @@
     {
         "inputs": [
             {
+                "name": "id_form",
+                "type": "felt"
+            },
+            {
+                "name": "user",
+                "type": "felt"
+            }
+        ],
+        "name": "view_score_form_user",
+        "outputs": [
+            {
+                "name": "point",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "name",
+                "type": "felt"
+            }
+        ],
+        "name": "create_form",
+        "outputs": [
+            {
+                "name": "id_form",
+                "type": "felt"
+            }
+        ],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "name": "name",
                 "type": "felt"
             },
@@ -246,16 +336,63 @@
             {
                 "name": "dquestions",
                 "type": "Question*"
+            },
+            {
+                "name": "status_open",
+                "type": "felt"
             }
         ],
-        "name": "create_test",
+        "name": "create_form_add_questions",
+        "outputs": [
+            {
+                "name": "id_form",
+                "type": "felt"
+            }
+        ],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_form",
+                "type": "felt"
+            },
+            {
+                "name": "dquestions_len",
+                "type": "felt"
+            },
+            {
+                "name": "dquestions",
+                "type": "Question*"
+            },
+            {
+                "name": "status_open",
+                "type": "felt"
+            }
+        ],
+        "name": "add_questions",
         "outputs": [],
         "type": "function"
     },
     {
         "inputs": [
             {
-                "name": "id_test",
+                "name": "id_form",
+                "type": "felt"
+            }
+        ],
+        "name": "forms_change_status_ready",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_form",
+                "type": "felt"
+            },
+            {
+                "name": "nickname",
                 "type": "felt"
             },
             {
@@ -268,6 +405,32 @@
             }
         ],
         "name": "send_answer",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_form",
+                "type": "felt"
+            }
+        ],
+        "name": "close_forms",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_form",
+                "type": "felt"
+            },
+            {
+                "name": "id_question_remove",
+                "type": "felt"
+            }
+        ],
+        "name": "remove_questions",
         "outputs": [],
         "type": "function"
     }

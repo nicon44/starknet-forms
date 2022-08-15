@@ -1,11 +1,14 @@
 import { useStarknetInvoke } from "@starknet-react/core";
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import { useFormContract } from "../hooks/useFormContract";
 import CompleteForm from "./Form";
 import FormSelector from "./FormSelector";
 
 const FormContainer = () => {
-  const [formId, setFormId] = useState<number | null>(null);
+  const {id} = useParams();
+  const initId = id ? +id : undefined;
+  const [formId, setFormId] = useState<number | undefined>(initId);
   const { contract: test } = useFormContract();
   const { data, loading, error, reset, invoke } = useStarknetInvoke({
     contract: test,
@@ -22,7 +25,7 @@ const FormContainer = () => {
     invoke({ args })
       .then((response) => {
         console.log(response);
-        setFormId(null);
+        setFormId(undefined);
       })
       .catch((e) => {
         alert("Error");

@@ -1,5 +1,8 @@
-import { useStarknetInvoke } from "@starknet-react/core";
-import { useState } from "react";
+import {
+  useStarknetInvoke,
+  useStarknetTransactionManager,
+} from "@starknet-react/core";
+import { useEffect, useState } from "react";
 import { useFormContract } from "../hooks/useFormContract";
 import convertCorrectOption from "../utils/convertCorrectOption";
 import responseToString from "../utils/responseToString";
@@ -10,12 +13,18 @@ import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import "./CreateForm.css";
 import { FaTrashAlt, FaEdit } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const CreateForm = () => {
   const { contract: test } = useFormContract();
-  const { data, loading, error, reset, invoke } = useStarknetInvoke({
+  const { invoke: invokeCreateAndAdd } = useStarknetInvoke({
     contract: test,
-    method: "create_test",
+    method: "create_form_add_questions",
+  });
+
+  const { invoke: invokeCreateEmpty } = useStarknetInvoke({
+    contract: test,
+    method: "create_form",
   });
 
   const [description, setDescription] = useState("");
@@ -30,6 +39,8 @@ const CreateForm = () => {
 
   const [editingId, setEditingId] = useState<number | undefined>(undefined);
 
+  const navigate = useNavigate();
+
   const handleRadioChange = (event: any) => {
     const value = event.target.value;
     setOptionCorrect(+value);
@@ -37,15 +48,24 @@ const CreateForm = () => {
 
   const handleSubmit = (event: any) => {
     event.preventDefault();
-    const payload = {
-      args: [stringToHex(name), hexQuestions()],
-    };
-    console.log("payload", payload);
-    invoke(payload)
-      .then((response) => {
-        console.log(response);
+    const payload =
+      questions.length === 0
+        ? {
+            args: [stringToHex(name)],
+          }
+        : {
+            args: [stringToHex(name), hexQuestions(), 0],
+          };
+
+    const invokeFunction =
+      questions.length === 0 ? invokeCreateEmpty : invokeCreateAndAdd;
+
+    invokeFunction(payload)
+      .then(() => {
+        navigate("/my-forms");
       })
       .catch((e) => {
+        alert("There was an error in the transaction. Please try again");
         console.log("error", e);
       });
 
@@ -53,18 +73,18 @@ const CreateForm = () => {
   };
 
   const hexQuestions = () => {
-    const questionsCopy = [...questions]
-    return questionsCopy.map(question => {
+    const questionsCopy = [...questions];
+    return questionsCopy.map((question) => {
       return {
         description: stringToHex(question.description),
         optionA: stringToHex(question.optionA),
         optionB: stringToHex(question.optionB),
         optionC: stringToHex(question.optionC),
         optionD: stringToHex(question.optionD),
-        optionCorrect: question.optionCorrect
-      }
-    })
-  }
+        optionCorrect: question.optionCorrect,
+      };
+    });
+  };
 
   const handleInputChange = (event: any, setFunction: any) => {
     const value = event.target.value;
@@ -87,11 +107,11 @@ const CreateForm = () => {
       });
     } else {
       setQuestions((prevQuestions: any) => {
-        const newQuestions = [...prevQuestions]
-        newQuestions[editingId!] = newQuestion
-        return newQuestions
-      })
-      setEditingId(undefined)
+        const newQuestions = [...prevQuestions];
+        newQuestions[editingId!] = newQuestion;
+        return newQuestions;
+      });
+      setEditingId(undefined);
     }
     resetForm();
   };
@@ -131,8 +151,8 @@ const CreateForm = () => {
   };
 
   const editing = () => {
-    return (!!editingId || editingId === 0);
-  }
+    return !!editingId || editingId === 0;
+  };
 
   return (
     <>
@@ -146,9 +166,7 @@ const CreateForm = () => {
               required
               onChange={(event) => handleInputChange(event, setName)}
             />
-            {questions.length === 0 && (
-              <p className="mt-3">Add new questions to create a form</p>
-            )}
+
             {questions.length > 0 &&
               questions.map((question, index) => {
                 return (
@@ -176,14 +194,18 @@ const CreateForm = () => {
                   </div>
                 );
               })}
+            {questions.length === 0 && (
+              <div className="mt-3">
+                <Button type="submit">CREATE EMPTY FORM</Button>
+                <span className="ml-1">or add new questions</span>
+              </div>
+            )}
             {questions.length > 0 && <Button type="submit">CREATE FORM</Button>}
           </Form>
         </Col>
         <Col md="4">
           {!editing() && <h4>Add new question</h4>}
-          {editing() && (
-            <h4>Edit question {editingId! + 1}</h4>
-          )}
+          {editing() && <h4>Edit question {editingId! + 1}</h4>}
           <Form id="form" onSubmit={addQuestionHandler}>
             <Form.Label>Description: </Form.Label>
             <Form.Control
@@ -281,13 +303,6 @@ const CreateForm = () => {
           </Form>
         </Col>
       </Row>
-
-      {/* TODO: only for testing purposes */}
-      <ul className="mt-3">
-        <li>Data: {data}</li>
-        <li>Loading: {loading}</li>
-        <li>Error: {error}</li>
-      </ul>
     </>
   );
 };
