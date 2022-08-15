@@ -1,99 +1,270 @@
 %lang starknet
 
+from src.common.utils import Question, Form, Row
+
+from src.forms import STATUS_OPEN
+from src.forms import STATUS_READY
+from src.forms import STATUS_CLOSED
+
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
-
-from src.forms import Question
-from src.forms import Test
-from src.forms import view_test_count
-from src.forms import view_test
-from src.forms import view_question_count
-from src.forms import view_questions
-from src.forms import create_test
-from src.forms import add_question
-from src.forms import add_correct_answer
-from src.forms import send_answer
-from src.forms import _get_answer_for_id
-from src.forms import view_question
-from src.forms import view_count_users_test
-from src.forms import view_user_test
-from src.forms import view_points_user_test
 from starkware.starknet.common.syscalls import get_caller_address
+from starkware.cairo.common.hash import hash2
 
-@view
-func test_empty{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
-    let (test_count) = view_test_count()
-    assert test_count = 0
-    return ()
-end
+from src.interfaces.IForm import IForm
 
-@view
-func test_question_empty{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
-    let (test_id) = create_test(1)
-    let (question_count) = view_question_count(test_id)
-    assert question_count = 0
-    return ()
-end
+@external
+func test_create_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
+    alloc_locals
+    
+    local contract_address : felt
+    %{ ids.contract_address = deploy_contract("./src/forms.cairo", []).contract_address %}
 
-@view
-func test_add_question_count{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
-    let (test_id) = create_test(1)
-    let (question_id) = add_question(test_id, 00, 11, 22, 33, 44)
-    let (question_count) = view_question_count(test_id)
+    let secret = 'starknet'
+    let (secret_hash) = hash2{hash_ptr=pedersen_ptr}(secret, 0)
+    let (option_correct_hash) = hash2{hash_ptr=pedersen_ptr}(secret, 'celeste')
+    let (local array: Question*) = alloc() 
+    assert array[0] = Question('El cielo es?', 'rojo', 'gris', 'celeste', 'blanco', option_correct_hash)
+    let (id_form) = IForm.create_form(
+        contract_address=contract_address,
+        name='Create Form',
+        dquestions_len=1, 
+        dquestions=array,
+        status_open=1,
+        secret_hash=secret_hash
+    )
+
+    let (form: Form) = IForm.view_form(
+        contract_address=contract_address,
+        id_form=id_form
+    )
+
+    assert form.name = 'Create Form'
+    assert form.status = STATUS_OPEN
+    assert form.secret_hash = secret_hash
+    assert form.secret = 0
+
+    let (form_count) = IForm.view_form_count(
+        contract_address=contract_address)
+    assert form_count = 1
+
+    let (question: Question) = IForm.view_question(
+        contract_address=contract_address,
+        id_form=id_form,
+        id_question=0
+    )
+    assert question.description = 'El cielo es?'
+    assert question.optionA = 'rojo'
+    assert question.optionB = 'gris'
+    assert question.optionC = 'celeste'
+    assert question.optionD = 'blanco'
+    assert question.option_correct_hash = option_correct_hash
+
+    let (question_count) = IForm.view_question_count(
+        contract_address=contract_address,
+        id_form=id_form)
     assert question_count = 1
+    
     return ()
 end
 
-@view
-func test_add_question_correct{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
-    let (test_id) = create_test(1)
-    let (question_id) = add_question(test_id, 00, 11, 22, 33, 44)
-    let (question: Question) = view_question(test_id, question_id)
-    assert question.description = 00
-    assert question.optionA = 11
-    assert question.optionB = 22
-    assert question.optionC = 33
-    assert question.optionD = 44
-    return ()
-end
+@external
+func test_updated_form{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
 
-@view
-func test_add_correct_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
     alloc_locals
+    let (contract_address) = test_integration.deploy_contract()
+    let secret = 'starknet'
+    let (secret_hash) = hash2{hash_ptr=pedersen_ptr}(secret, 0)
+    let (local array: Question*) = alloc() 
+    assert array[0] = Question('capital de Arg?', 'Jujuy', 'Bs As', 'Sanmi', 'La Plata', 2)
+    assert array[1] = Question('capital de Brasil?', 'Rio', 'Brasilia', 'Belo', 'Manaos', 2)
+    let (id_form) = IForm.updated_form(
+        contract_address=contract_address,
+        id_form=0,
+        name='Updated Form',
+        dquestions_len=2, 
+        dquestions=array,
+        status_open=0,
+        secret_hash=secret_hash
+    )
 
-    let (test_id) = create_test(1)
-    let (question_id) = add_question(test_id, 00, 11, 22, 33, 44)
+    assert id_form = 0
+    
+    let (form: Form) = IForm.view_form(
+        contract_address=contract_address,
+        id_form=id_form
+    )
 
-    let (test: Test) = view_test(test_id)
-    assert test.open = TRUE
+    let (form_count) = IForm.view_form_count(
+        contract_address=contract_address)
+    assert form_count = 1
 
-    let (local array : felt*) = alloc()
-    assert array[0] = 1
-    add_correct_answer(test_id, 1, array)
+    assert form.name = 'Updated Form'
+    assert form.status = STATUS_READY
+    assert form.secret_hash = secret_hash
+    assert form.secret = 0
 
-    let (test1: Test) = view_test(test_id)
-    assert test1.open = FALSE
+    let (question: Question) = IForm.view_question(
+        contract_address=contract_address,
+        id_form=id_form,
+        id_question=0
+    )
+    assert question.description = 'capital de Arg?'
+    assert question.optionA = 'Jujuy'
+    assert question.optionB = 'Bs As'
+    assert question.optionC = 'Sanmi'
+    assert question.optionD = 'La Plata'
+    assert question.option_correct_hash = 2
+
+    let (question1: Question) = IForm.view_question(
+        contract_address=contract_address,
+        id_form=id_form,
+        id_question=1
+    )
+    assert question1.description = 'capital de Brasil?'
+    assert question1.optionA = 'Rio'
+    assert question1.optionB = 'Brasilia'
+    assert question1.optionC = 'Belo'
+    assert question1.optionD = 'Manaos'
+    assert question1.option_correct_hash = 2
+
+    let (question_count) = IForm.view_question_count(
+        contract_address=contract_address,
+        id_form=id_form)
+    assert question_count = 2
 
     return ()
 end
 
-@view
+@external 
+func test_forms_change_status_ready{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
+
+    alloc_locals
+    let (contract_address) = test_integration.deploy_contract()
+    let (form: Form) = IForm.view_form(
+        contract_address=contract_address,
+        id_form=0
+    )
+
+    assert form.status = STATUS_OPEN
+
+    IForm.forms_change_status_ready(
+        contract_address=contract_address,
+        id_form=0
+    )
+
+    let (form1: Form) = IForm.view_form(
+        contract_address=contract_address,
+        id_form=0
+    )
+
+    assert form1.status = STATUS_READY
+
+    return()
+
+end
+
+@external 
 func test_send_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
+
     alloc_locals
+    let (contract_address) = test_integration.deploy_contract()
+    let (form: Form) = IForm.view_form(
+        contract_address=contract_address,
+        id_form=0
+    )
+    IForm.forms_change_status_ready(
+        contract_address=contract_address,
+        id_form=0
+    )
 
-    let (test_id) = create_test(1)
-    let (question_id) = add_question(test_id, 00, 11, 22, 33, 44)
     let (local array : felt*) = alloc()
-    assert array[0] = 1
-    add_correct_answer(test_id, 1, array)
+    assert array[0] = 2
+
+    IForm.send_answer(
+        contract_address=contract_address,
+        id_form=0,
+        nickname='Juan',
+        answers_len=1,
+        answers=array
+    )
+    
+    let (count) = IForm.view_users_form_count(
+        contract_address=contract_address,
+        id_form=0
+    )
+    assert count = 1
+    
+    return()
+
+end
+
+@external 
+func test_close_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
+
+    alloc_locals
+    let (contract_address) = test_integration.deploy_contract()
+    let (form: Form) = IForm.view_form(
+        contract_address=contract_address,
+        id_form=0
+    )
+    IForm.forms_change_status_ready(
+        contract_address=contract_address,
+        id_form=0
+    )
 
     let (local array : felt*) = alloc()
-    assert array[0] = 1
-    send_answer(test_id, 1, array)
+    assert array[0] = 2
 
-    let (points) = view_points_user_test(test_id)
-    assert points = 5
+    IForm.send_answer(
+        contract_address=contract_address,
+        id_form=0,
+        nickname='Juan',
+        answers_len=1,
+        answers=array
+    )
+    
+    IForm.close_forms(
+        contract_address=contract_address,
+        id_form=0,
+        secret='starknet'
+    )
 
-    return ()
+    let (records_len : felt, records : Row*) = IForm.view_score_form(
+        contract_address=contract_address,
+        id_form=0
+    )
+
+    assert records[0].score = 5
+    
+    return()
+
+end
+# --------------------------
+# INTEGRATION TEST FUNCTIONS
+# --------------------------
+
+namespace test_integration:
+    func deploy_contract{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (contract_address : felt):
+        alloc_locals
+        local contract_address : felt
+        # We deploy contract and put its address into a local variable. Second argument is calldata array
+        %{ ids.contract_address = deploy_contract("./src/forms.cairo", []).contract_address %}
+
+        let secret = 'starknet'
+        let (secret_hash) = hash2{hash_ptr=pedersen_ptr}(secret, 0)
+        let (option_correct_hash) = hash2{hash_ptr=pedersen_ptr}('celeste', secret)
+        let (local array: Question*) = alloc() 
+        assert array[0] = Question('El cielo es?', 'rojo', 'gris', 'celeste', 'blanco', option_correct_hash)
+        let (id_form) = IForm.create_form(
+            contract_address=contract_address,
+            name='Create Form',
+            dquestions_len=1, 
+            dquestions=array,
+            status_open=1,
+            secret_hash=secret_hash
+        )
+        return (contract_address)
+    end
 end
