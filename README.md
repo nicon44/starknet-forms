@@ -5,7 +5,7 @@ Using this dApp you can create a multiple choice form / test and share it with o
 
 # Public server
 
-We deployed this app in a public heroku server. It's available at https://starknet-forms-app.herokuapp.com/
+We deployed this app in a public heroku server. It is available at https://starknet-forms-app.herokuapp.com/
 
 # Demo
 
@@ -73,7 +73,7 @@ Every time the owner wants to edit the form, he will need to introduce the corre
 
 If the form is set to READY, users can complete it.
 
-When the owner decides it, he can close the form. Once it's closed it cannot be completed anymore, and at this point, the smart contract calculates the score for every student. In order to do this, once again, the owner needs to introduce the correct secret.
+When the owner decides it, he can close the form. Once it is closed it cannot be completed anymore, and at this point, the smart contract calculates the score for every student. In order to do this, once again, the owner needs to introduce the correct secret.
 
 The closing process: 
 
@@ -83,8 +83,8 @@ Then, for every user, for every question, the user answer gets hashed together w
 
 # Next steps
 
-1. We found a technical issue: the questions and answers in forms can't be too long, because they are limited by the length of felt type in cairo. So, when you introduce a question/answer that is too long, the transaction fails.
-One of the possibilities we thought to solve this is to save the hash of the questions / answers, instead of the entire string. We would need to add a database that stores the real questions and answers from where we can get them, and use the data returned from the smart contract to compare with what's in the database to make sure nothing was altered. This also would be good because we could use less storage, something that we know it's expensive in Starknet.
+1. We found a technical issue: the questions and answers in forms cannot be too long, because they are limited by the length of felt type in cairo. So, when you introduce a question/answer that is too long, the transaction fails.
+One of the possibilities we thought to solve this is to save the hash of the questions / answers, instead of the entire string. We would need to add a database that stores the real questions and answers from where we can get them, and use the data returned from the smart contract to compare with what is in the database to make sure nothing was altered. This also would be good because we could use less storage, something that we know it is expensive in Starknet.
 
 2. In my results page, we would like to show the user not only the score, but all his answers, compared to the correct answers.
 
