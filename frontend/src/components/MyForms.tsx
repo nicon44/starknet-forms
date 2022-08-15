@@ -7,8 +7,9 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { Button, OverlayTrigger, Tooltip } from "react-bootstrap";
 import Table from "react-bootstrap/Table";
-import { FaCheck, FaShareAlt, FaTimes } from "react-icons/fa";
+import { FaCheck, FaEdit, FaShareAlt, FaTimes } from "react-icons/fa";
 import { TailSpin } from "react-loader-spinner";
+import { useNavigate } from "react-router-dom";
 import { useFormContract } from "../hooks/useFormContract";
 import responseToString from "../utils/responseToString";
 import CloseModal from "./CloseModal";
@@ -41,7 +42,7 @@ const MyForms = () => {
     method: "forms_change_status_ready",
   });
 
-
+  const navigate = useNavigate();
 
   const { transactions } = useStarknetTransactionManager();
 
@@ -94,6 +95,10 @@ const MyForms = () => {
     setShareModalId(id);
   };
 
+  const editHandler = (id: number) => () => {
+    navigate("/edit-form/" + id)
+  };
+
   return (
     <>
       <h3>My forms</h3>
@@ -114,12 +119,13 @@ const MyForms = () => {
                   <td>{item.id}</td>
                   <td>{item.name}</td>
                   <td>
-                    <span className={"badge rounded-pill " + item.status}>
-                      {item.status}
+                    <span className={"badge rounded-pill " + item.status.toUpperCase()}>
+                      {item.status.toUpperCase()}
                     </span>
                   </td>
                   <td>
-                    {item.status === "OPEN" && (
+                    {item.status.toUpperCase() === "OPEN" && (
+                      <>
                       <OverlayTrigger
                         placement="bottom"
                         overlay={
@@ -136,8 +142,25 @@ const MyForms = () => {
                           <FaCheck />
                         </Button>
                       </OverlayTrigger>
+                      <OverlayTrigger
+                        placement="bottom"
+                        overlay={
+                          <Tooltip id={`tooltip-${item.id}`}>
+                            Edit form {item.id}
+                          </Tooltip>
+                        }
+                      >
+                        <Button
+                          className="mr-1 action"
+                          variant="secondary"
+                          onClick={editHandler(item.id)}
+                        >
+                          <FaEdit />
+                        </Button>
+                      </OverlayTrigger>
+                      </>
                     )}
-                    {item.status === "READY" && (
+                    {item.status.toUpperCase() === "READY" && (
                       <OverlayTrigger
                         placement="bottom"
                         overlay={
@@ -155,7 +178,7 @@ const MyForms = () => {
                         </Button>
                       </OverlayTrigger>
                     )}
-                    {item.status === "READY" && (
+                    {item.status.toUpperCase() === "READY" && (
                       <OverlayTrigger
                         placement="bottom"
                         overlay={

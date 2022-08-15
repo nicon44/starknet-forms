@@ -13,7 +13,9 @@ const CloseModal = (props: any) => {
     const payload = {
       args: [props.id, stringToHex(secret)],
     };
-    invokeClose(payload).catch((e) => {
+    invokeClose(payload).then(() => {
+      props.onHide()
+    }).catch((e) => {
       alert("There was an error in the transaction");
     });
   };

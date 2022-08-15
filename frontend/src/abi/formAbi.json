@@ -193,6 +193,27 @@
             {
                 "name": "id_form",
                 "type": "felt"
+            },
+            {
+                "name": "id_question",
+                "type": "felt"
+            }
+        ],
+        "name": "view_question",
+        "outputs": [
+            {
+                "name": "question",
+                "type": "Question"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_form",
+                "type": "felt"
             }
         ],
         "name": "view_questions",
@@ -288,6 +309,52 @@
     {
         "inputs": [
             {
+                "name": "id_form",
+                "type": "felt"
+            }
+        ],
+        "name": "view_correct_form_answers",
+        "outputs": [
+            {
+                "name": "records_len",
+                "type": "felt"
+            },
+            {
+                "name": "records",
+                "type": "felt*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_form",
+                "type": "felt"
+            },
+            {
+                "name": "user",
+                "type": "felt"
+            }
+        ],
+        "name": "view_users_form_answers",
+        "outputs": [
+            {
+                "name": "records_len",
+                "type": "felt"
+            },
+            {
+                "name": "records",
+                "type": "felt*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "name": "name",
                 "type": "felt"
             },
@@ -308,7 +375,43 @@
                 "type": "felt"
             }
         ],
-        "name": "create_form_add_questions",
+        "name": "create_form",
+        "outputs": [
+            {
+                "name": "id_form",
+                "type": "felt"
+            }
+        ],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "id_form",
+                "type": "felt"
+            },
+            {
+                "name": "name",
+                "type": "felt"
+            },
+            {
+                "name": "dquestions_len",
+                "type": "felt"
+            },
+            {
+                "name": "dquestions",
+                "type": "Question*"
+            },
+            {
+                "name": "status_open",
+                "type": "felt"
+            },
+            {
+                "name": "secret_hash",
+                "type": "felt"
+            }
+        ],
+        "name": "updated_form",
         "outputs": [
             {
                 "name": "id_form",
@@ -363,21 +466,6 @@
             }
         ],
         "name": "close_forms",
-        "outputs": [],
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "name": "id_form",
-                "type": "felt"
-            },
-            {
-                "name": "id_question_remove",
-                "type": "felt"
-            }
-        ],
-        "name": "remove_questions",
         "outputs": [],
         "type": "function"
     }

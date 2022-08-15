@@ -1,22 +1,32 @@
-import { useStarknetInvoke } from "@starknet-react/core";
-import { useState } from "react";
+import { useStarknetCall, useStarknetInvoke } from "@starknet-react/core";
+import { useMemo, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import { FaEdit, FaTrashAlt } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { hash } from "starknet";
+import { BigNumberish, toHex } from "starknet/utils/number";
 import { useFormContract } from "../hooks/useFormContract";
+import IQuestion from "../model/question";
 import convertCorrectOption from "../utils/convertCorrectOption";
+import responseToString from "../utils/responseToString";
 import stringToHex from "../utils/stringToHex";
 import "./CreateForm.css";
 
-const CreateForm = () => {
+const CreateForm: React.FC = () => {
+  const { id } = useParams();
+  const isEditing = !!id;
+
   const { contract: test } = useFormContract();
-  const { invoke: invokeCreateAndAdd } = useStarknetInvoke({
+  const { invoke: invokeCreateForm } = useStarknetInvoke({
     contract: test,
-    method: "create_form_add_questions",
+    method: "create_form",
+  });
+  const { invoke: invokeUpdateForm } = useStarknetInvoke({
+    contract: test,
+    method: "updated_form",
   });
 
   const [description, setDescription] = useState("");
@@ -27,7 +37,9 @@ const CreateForm = () => {
   const [optionCorrect, setOptionCorrect] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [secret, setSecret] = useState("");
+  const [correctSecret, setCorrectSecret] = useState(false);
   const [readySwitch, setReadySwitch] = useState(true);
+  const [invalidSecret, setInvalidSecret] = useState(false);
 
   const [questions, setQuestions] = useState<Array<any>>([]);
 
@@ -47,7 +59,15 @@ const CreateForm = () => {
 
   const handleSubmit = (event: any) => {
     event.preventDefault();
-    const payload = {
+    const payload = isEditing ? {
+      args: [
+        id,
+        stringToHex(name),
+        hexQuestions(),
+        readySwitch ? 0 : 1,
+        hash.pedersen([stringToHex(secret), 0]),
+      ],
+    } : {
       args: [
         stringToHex(name),
         hexQuestions(),
@@ -56,7 +76,9 @@ const CreateForm = () => {
       ],
     };
 
-    invokeCreateAndAdd(payload)
+    const invokeFunction = isEditing ? invokeUpdateForm : invokeCreateForm;
+
+    invokeFunction(payload)
       .then(() => {
         navigate("/my-forms");
       })
@@ -64,6 +86,90 @@ const CreateForm = () => {
         alert("There was an error in the transaction. Please try again");
         console.log("error", e);
       });
+  };
+
+  const { data: formResult } = useStarknetCall({
+    contract: test,
+    method: "view_questions",
+    args: [id],
+    options: { watch: false },
+  });
+
+  const { data: formData } = useStarknetCall({
+    contract: test,
+    method: "view_form",
+    args: [id],
+    options: { watch: false },
+  });
+
+  useMemo(() => {
+    if (formData && formData.length > 0) {
+      if (formData[0]) {
+        setName(responseToString(formData[0].name))
+        return;
+      }
+    }
+  }, [formData]);
+
+  const calculateCorrectOption = (question: any) => {
+    const correctOptionHashed: BigNumberish = toHex(
+      question.option_correct_hash
+    );
+    if (
+      correctOptionHashed ===
+      hash.pedersen([toHex(question.optionA), stringToHex(secret)])
+    ) {
+      return 0;
+    } else if (
+      correctOptionHashed ===
+      hash.pedersen([toHex(question.optionB), stringToHex(secret)])
+    ) {
+      return 1;
+    } else if (
+      correctOptionHashed ===
+      hash.pedersen([toHex(question.optionC), stringToHex(secret)])
+    ) {
+      return 2;
+    } else if (
+      correctOptionHashed ===
+      hash.pedersen([toHex(question.optionD), stringToHex(secret)])
+    ) {
+      return 3;
+    } else {
+      return 99;
+    }
+  };
+
+  useMemo(() => {
+    if (formResult && formResult.length > 0) {
+      let form = [];
+      if (formResult[0] instanceof Array) {
+        for (let item of formResult[0]) {
+          let question: any = {
+            id: responseToString(item.description),
+            description: responseToString(item.description),
+            optionA: responseToString(item.optionA),
+            optionB: responseToString(item.optionB),
+            optionC: responseToString(item.optionC),
+            optionD: responseToString(item.optionD),
+            optionCorrect: calculateCorrectOption(item),
+          };
+          form.push(question);
+        }
+      }
+      setQuestions(form);
+      return form;
+    }
+  }, [formResult, secret]);
+
+  const handleSecretSubmit = (event: any) => {
+    setInvalidSecret(false);
+    event.preventDefault();
+    if (questions[0].optionCorrect >= 0 && questions[0].optionCorrect <= 3) {
+      setCorrectSecret(true);
+    } else {
+      setInvalidSecret(true);
+    }
   };
 
   const hexQuestions = () => {
@@ -86,13 +192,13 @@ const CreateForm = () => {
       case 0:
         correctOption = stringToHex(question.optionA);
         break;
-        case 1:
+      case 1:
         correctOption = stringToHex(question.optionB);
         break;
-        case 2:
+      case 2:
         correctOption = stringToHex(question.optionC);
         break;
-        case 3:
+      case 3:
         correctOption = stringToHex(question.optionD);
         break;
     }
@@ -167,16 +273,44 @@ const CreateForm = () => {
     return !!editingId || editingId === 0;
   };
 
+  if (isEditing && !correctSecret) {
+    return (
+      <>
+        <Form onSubmit={handleSecretSubmit}>
+          <Form.Label>Secret *</Form.Label>
+          <Form.Control
+            type="text"
+            required
+            isInvalid={invalidSecret}
+            onChange={(event) => handleInputChange(event, setSecret)}
+          />
+          {invalidSecret && (
+            <Form.Control.Feedback type="invalid">
+              The inserted secret is invalid.
+            </Form.Control.Feedback>
+          )}
+          <Form.Text className="text-muted">
+            Please enter your secret to edit the form.
+          </Form.Text>
+          <div className="mt-3">
+            <Button type="submit">CONTINUE</Button>
+          </div>
+        </Form>
+      </>
+    );
+  }
+
   return (
     <>
       <Row>
         <Col md="8">
-          <h4>Your form:</h4>
+          {isEditing ? <h4>Editing form {id}:</h4> : <h4>Your form:</h4>}
           <Form onSubmit={handleSubmit}>
             <Form.Label>Name *</Form.Label>
             <Form.Control
               type="text"
               required
+              value={name}
               onChange={(event) => handleInputChange(event, setName)}
             />
 
@@ -211,6 +345,8 @@ const CreateForm = () => {
             <Form.Control
               type="text"
               required
+              disabled={isEditing}
+              value={secret}
               onChange={(event) => handleInputChange(event, setSecret)}
             />
             <Form.Text className="text-muted">
@@ -235,9 +371,15 @@ const CreateForm = () => {
               </p>
             )}
             <div className="mt-3">
-              <Button disabled={questions.length === 0} type="submit">
-                CREATE FORM
-              </Button>
+              {isEditing ? (
+                <Button variant="success" disabled={questions.length === 0} type="submit">
+                  UPDATE FORM
+                </Button>
+              ) : (
+                <Button disabled={questions.length === 0} type="submit">
+                  CREATE FORM
+                </Button>
+              )}
             </div>
           </Form>
         </Col>
