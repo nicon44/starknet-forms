@@ -8,3 +8,9 @@ libs_path = "lib"
 forms = [
     "src/forms.cairo",
 ]
+
+[profile.devnet.protostar.deploy]
+gateway-url = "http://127.0.0.1:5050/"
+
+[profile.testnet.protostar.deploy]
+network="alpha-goerli"
