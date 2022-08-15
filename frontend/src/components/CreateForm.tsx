@@ -362,8 +362,8 @@ const CreateForm: React.FC = () => {
             />
             <Form.Text className="text-muted">
               {readySwitch
-                ? "This form will be set to READY. This means you will not be able to update it and other users will be able to complete it right away."
-                : "This form will stay OPEN. This means you will be able to update it later."}
+                ? "This form will be set to READY. You will not be able to update it and other users will be able to complete it right away."
+                : "This form will stay OPEN. You will be able to update it later."}
             </Form.Text>
             {questions.length === 0 && (
               <p className="mt-5">

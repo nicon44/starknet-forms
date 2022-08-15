@@ -1,13 +1,15 @@
 import { useStarknetInvoke } from "@starknet-react/core";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useFormContract } from "../hooks/useFormContract";
 import stringToHex from "../utils/stringToHex";
 import CompleteForm from "./Form";
 import FormSelector from "./FormSelector";
 
 const FormContainer = () => {
-  const {id} = useParams();
+  const { id } = useParams();
+
+  const navigate = useNavigate();
   const initId = id ? +id : undefined;
   const [formId, setFormId] = useState<number | undefined>(initId);
   const { contract: test } = useFormContract();
@@ -24,7 +26,7 @@ const FormContainer = () => {
     const args = [formId, stringToHex(nickname), result];
     invoke({ args })
       .then((response) => {
-        setFormId(undefined);
+        navigate("/my-results");
       })
       .catch((e) => {
         alert("Error");

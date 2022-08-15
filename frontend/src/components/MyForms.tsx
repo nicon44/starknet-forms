@@ -4,16 +4,25 @@ import {
   useStarknetInvoke,
   useStarknetTransactionManager,
 } from "@starknet-react/core";
+import RcTooltip from "rc-tooltip";
+import "rc-tooltip/assets/bootstrap.css";
 import { useEffect, useMemo, useState } from "react";
-import { Button, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import Table from "react-bootstrap/Table";
-import { FaCheck, FaEdit, FaShareAlt, FaTimes } from "react-icons/fa";
+import {
+  FaCheck,
+  FaClipboardList,
+  FaEdit,
+  FaShareAlt,
+  FaTimes,
+} from "react-icons/fa";
 import { TailSpin } from "react-loader-spinner";
 import { useNavigate } from "react-router-dom";
 import { useFormContract } from "../hooks/useFormContract";
 import responseToString from "../utils/responseToString";
 import CloseModal from "./CloseModal";
 import "./MyForms.css";
+import ResultsModal from "./ResultsModal";
 import ShareModal from "./ShareModal";
 
 interface FormRow {
@@ -29,6 +38,7 @@ const MyForms = () => {
   const [myForms, setMyForms] = useState<FormRow[]>([]);
   const [shareModalId, setShareModalId] = useState<number | null>(null);
   const [closeModalId, setCloseModalId] = useState<number | null>(null);
+  const [resultsModalId, setResultsModalId] = useState<number | null>(null);
 
   const { data: myFormsResult } = useStarknetCall({
     contract: test,
@@ -88,15 +98,19 @@ const MyForms = () => {
   };
 
   const closeHandler = (id: number) => () => {
-    setCloseModalId(id)
+    setCloseModalId(id);
   };
 
   const showShareModal = (id: number) => () => {
     setShareModalId(id);
   };
 
+  const viewResultsHandler = (id: number) => () => {
+    setResultsModalId(id);
+  };
+
   const editHandler = (id: number) => () => {
-    navigate("/edit-form/" + id)
+    navigate("/edit-form/" + id);
   };
 
   return (
@@ -119,81 +133,84 @@ const MyForms = () => {
                   <td>{item.id}</td>
                   <td>{item.name}</td>
                   <td>
-                    <span className={"badge rounded-pill " + item.status.toUpperCase()}>
+                    <span
+                      className={
+                        "badge rounded-pill " + item.status.toUpperCase()
+                      }
+                    >
                       {item.status.toUpperCase()}
                     </span>
                   </td>
                   <td>
                     {item.status.toUpperCase() === "OPEN" && (
                       <>
-                      <OverlayTrigger
-                        placement="bottom"
-                        overlay={
-                          <Tooltip id={`tooltip-${item.id}`}>
-                            Set form {item.id} to READY
-                          </Tooltip>
-                        }
-                      >
-                        <Button
-                          className="mr-1 action"
-                          variant="success"
-                          onClick={readyHandler(item.id)}
+                        <RcTooltip
+                          placement="bottom"
+                          overlay={<span>Set form {item.id} to READY</span>}
                         >
-                          <FaCheck />
-                        </Button>
-                      </OverlayTrigger>
-                      <OverlayTrigger
-                        placement="bottom"
-                        overlay={
-                          <Tooltip id={`tooltip-${item.id}`}>
-                            Edit form {item.id}
-                          </Tooltip>
-                        }
-                      >
-                        <Button
-                          className="mr-1 action"
-                          variant="secondary"
-                          onClick={editHandler(item.id)}
+                          <Button
+                            className="mr-1 action"
+                            variant="success"
+                            onClick={readyHandler(item.id)}
+                          >
+                            <FaCheck />
+                          </Button>
+                        </RcTooltip>
+                        <RcTooltip
+                          placement="bottom"
+                          overlay={<span>Edit form {item.id}</span>}
                         >
-                          <FaEdit />
-                        </Button>
-                      </OverlayTrigger>
+                          <Button
+                            className="mr-1 action"
+                            variant="secondary"
+                            onClick={editHandler(item.id)}
+                          >
+                            <FaEdit />
+                          </Button>
+                        </RcTooltip>
                       </>
                     )}
                     {item.status.toUpperCase() === "READY" && (
-                      <OverlayTrigger
-                        placement="bottom"
-                        overlay={
-                          <Tooltip id={`tooltip-${item.id}`}>
-                            Close form {item.id}
-                          </Tooltip>
-                        }
-                      >
-                        <Button
-                          className="mr-1 action"
-                          variant="danger"
-                          onClick={closeHandler(item.id)}
+                      <>
+                        <RcTooltip
+                          placement="bottom"
+                          overlay={<span>Close form {item.id}</span>}
                         >
-                          <FaTimes />
-                        </Button>
-                      </OverlayTrigger>
+                          <Button
+                            className="mr-1 action"
+                            variant="danger"
+                            onClick={closeHandler(item.id)}
+                          >
+                            <FaTimes />
+                          </Button>
+                        </RcTooltip>
+
+                        <RcTooltip
+                          placement="bottom"
+                          overlay={<span>Share form {item.id}</span>}
+                        >
+                          <Button
+                            className="mr-1 action"
+                            onClick={showShareModal(item.id)}
+                          >
+                            <FaShareAlt />
+                          </Button>
+                        </RcTooltip>
+                      </>
                     )}
-                    {item.status.toUpperCase() === "READY" && (
-                      <OverlayTrigger
+                    {item.status.toUpperCase() === "CLOSED" && (
+                      <RcTooltip
                         placement="bottom"
-                        overlay={
-                          <Tooltip id={`tooltip-${item.id}`}>
-                            Share form {item.id}
-                          </Tooltip>
-                        }
+                        overlay={<span>View results of form {item.id}</span>}
                       >
                         <Button
                           className="mr-1 action"
-                          onClick={showShareModal(item.id)}
+                          variant="info"
+                          onClick={viewResultsHandler(item.id)}
                         >
-                          <FaShareAlt />
+                          <FaClipboardList />
                         </Button>
-                      </OverlayTrigger>
+                      </RcTooltip>
                     )}
                   </td>
                 </tr>
@@ -249,6 +266,11 @@ const MyForms = () => {
         id={closeModalId}
         show={closeModalId === 0 || !!closeModalId}
         onHide={() => setCloseModalId(null)}
+      />
+      <ResultsModal
+        id={resultsModalId}
+        show={resultsModalId === 0 || !!resultsModalId}
+        onHide={() => setResultsModalId(null)}
       />
     </>
   );

@@ -14,6 +14,7 @@
     "bootstrap": "^5.2.0",
     "get-starknet": "^1.4.2",
     "hex-encode-decode": "^1.0.0",
+    "rc-tooltip": "^5.2.2",
     "react": "^18.2.0",
     "react-bootstrap": "^2.4.0",
     "react-dom": "^18.2.0",

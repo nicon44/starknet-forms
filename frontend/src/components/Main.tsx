@@ -3,10 +3,10 @@ import { Container } from "react-bootstrap";
 import { Route, Routes } from "react-router-dom";
 import CreateForm from "./CreateForm";
 import FormContainer from "./FormContainer";
-import MyForms from "./MyForms";
 import Home from "./Home";
-import LeaderboardContainer from "./LeaderboardContainer";
-import'./Main.css';
+import "./Main.css";
+import MyForms from "./MyForms";
+import MyResults from "./MyResults";
 
 export default function Main() {
   const { account } = useStarknet();
@@ -21,12 +21,14 @@ export default function Main() {
           <Route path="/create-form" element={<CreateForm />} />
           <Route path="/edit-form/:id" element={<CreateForm />} />
           <Route path="/my-forms" element={<MyForms />} />
-          <Route path="/leaderboard" element={<LeaderboardContainer />} />
+          <Route path="/my-results" element={<MyResults />} />
         </Routes>
       ) : (
         <>
           <Home />
-          <p className="connect-warning mt-5">Please, connect your wallet to start using Starknet Forms</p>
+          <p className="connect-warning mt-5">
+            Please, connect your wallet to start using Starknet Forms
+          </p>
         </>
       )}
     </Container>
