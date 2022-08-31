@@ -41,36 +41,53 @@
       {
         "name": "description",
         "offset": 0,
-        "type": "felt"
+        "type": "Id_IPFS"
       },
       {
         "name": "optionA",
-        "offset": 1,
-        "type": "felt"
-      },
-      {
-        "name": "optionB",
         "offset": 2,
         "type": "felt"
       },
       {
-        "name": "optionC",
+        "name": "optionB",
         "offset": 3,
         "type": "felt"
       },
       {
-        "name": "optionD",
+        "name": "optionC",
         "offset": 4,
         "type": "felt"
       },
       {
-        "name": "option_correct_hash",
+        "name": "optionD",
         "offset": 5,
+        "type": "felt"
+      },
+      {
+        "name": "option_correct_hash",
+        "offset": 6,
         "type": "felt"
       }
     ],
     "name": "Question",
-    "size": 6,
+    "size": 7,
+    "type": "struct"
+  },
+  {
+    "members": [
+      {
+        "name": "high",
+        "offset": 0,
+        "type": "felt"
+      },
+      {
+        "name": "low",
+        "offset": 1,
+        "type": "felt"
+      }
+    ],
+    "name": "Id_IPFS",
+    "size": 2,
     "type": "struct"
   },
   {

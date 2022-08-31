@@ -11,11 +11,14 @@ import { BigNumberish, toHex } from "starknet/utils/number";
 import { useFormContract } from "../hooks/useFormContract";
 import IQuestion from "../model/question";
 import convertCorrectOption from "../utils/convertCorrectOption";
+import IpfsUtils from "../utils/IpfsUtils";
 import responseToString from "../utils/responseToString";
 import stringToHex from "../utils/stringToHex";
 import "./CreateForm.css";
 
 const CreateForm: React.FC = () => {
+
+  const ipfsUtils = new IpfsUtils();
   const { id } = useParams();
   const isEditing = !!id;
 
@@ -57,20 +60,22 @@ const CreateForm: React.FC = () => {
     setReadySwitch(value);
   };
 
-  const handleSubmit = (event: any) => {
+  const handleSubmit = async (event: any) => {
     event.preventDefault();
+
+    const hexQuestions = await getHexQuestions()
     const payload = isEditing ? {
       args: [
         id,
         stringToHex(name),
-        hexQuestions(),
+        hexQuestions,
         readySwitch ? 0 : 1,
         hash.pedersen([stringToHex(secret), 0]),
       ],
     } : {
       args: [
         stringToHex(name),
-        hexQuestions(),
+        hexQuestions,
         readySwitch ? 0 : 1,
         hash.pedersen([stringToHex(secret), 0]),
       ],
@@ -172,18 +177,36 @@ const CreateForm: React.FC = () => {
     }
   };
 
-  const hexQuestions = () => {
-    const questionsCopy = [...questions];
-    return questionsCopy.map((question) => {
-      return {
-        description: stringToHex(question.description),
+  const getHexQuestions = async () => {
+    const questionsCopy = [];
+    for (let i = 0; i < questions.length; i++) {
+      const question = questions[i]
+      const uploadedDescription = await ipfsUtils.upload(question.description)
+/*       const uploadedOptionA = await ipfsUpload(question.optionA)
+      const uploadedOptionB = await ipfsUpload(question.optionB)
+      const uploadedOptionC = await ipfsUpload(question.optionC)
+      const uploadedOptionD = await ipfsUpload(question.optionD) */
+      const descriptionHigh = uploadedDescription.slice(0,24)
+      const descriptionLow = uploadedDescription.slice(24,uploadedDescription.length)
+
+      const newQuestion = {
+        description: {
+          high: stringToHex(descriptionHigh),
+          low: stringToHex(descriptionLow)
+        },
         optionA: stringToHex(question.optionA),
         optionB: stringToHex(question.optionB),
         optionC: stringToHex(question.optionC),
         optionD: stringToHex(question.optionD),
+        /*         optionA: stringToHex(uploadedOptionA),
+        optionB: stringToHex(uploadedOptionB),
+        optionC: stringToHex(uploadedOptionC),
+        optionD: stringToHex(uploadedOptionD), */
         option_correct_hash: getOptionCorrectHash(question),
       };
-    });
+      questionsCopy.push(newQuestion)
+    }
+    return questionsCopy
   };
 
   const getOptionCorrectHash = (question: any) => {
@@ -389,7 +412,8 @@ const CreateForm: React.FC = () => {
           <Form id="form" onSubmit={addQuestionHandler}>
             <Form.Label>Description: </Form.Label>
             <Form.Control
-              type="text"
+              as="textarea"
+              rows={4}
               required
               value={description}
               onChange={(event) => handleInputChange(event, setDescription)}

@@ -4,12 +4,14 @@ import { Button, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useFormContract } from "../hooks/useFormContract";
 import IQuestion from "../model/question";
+import IpfsUtils from "../utils/IpfsUtils";
 import responseToString from "../utils/responseToString";
 
 const CompleteForm = (props: {
   id: number;
   onSubmit: (nickname: string, result: string) => void;
 }) => {
+  const ipfsUtils = new IpfsUtils();
   const { contract: test } = useFormContract();
 
   const { data: formResult } = useStarknetCall({
@@ -22,14 +24,20 @@ const CompleteForm = (props: {
   const [form, setForm] = useState<any>();
   const [nickname, setNickname] = useState('')
 
-  useMemo(() => {
+  const getFromIpfs = async (item: any) => {
+    const response = await ipfsUtils.download(responseToString(item.high)+responseToString(item.low))
+    return response;
+  }
+
+  useMemo(async () => {
     if (formResult && formResult.length > 0) {
       let form = [];
       if (formResult[0] instanceof Array) {
         for (let item of formResult[0]) {
+          const description = await getFromIpfs(item.description)
           let question: IQuestion = {
-            id: responseToString(item.description),
-            description: responseToString(item.description),
+            id: description,
+            description: description,
             optionA: responseToString(item.optionA),
             optionB: responseToString(item.optionB),
             optionC: responseToString(item.optionC),
@@ -43,6 +51,7 @@ const CompleteForm = (props: {
       return form;
     }
   }, [formResult]);
+
 
   const handleSubmit = (event: any) => {
     event.preventDefault();
