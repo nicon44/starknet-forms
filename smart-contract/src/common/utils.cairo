@@ -1,3 +1,8 @@
+struct Id_IPFS:
+    member high: felt
+    member low: felt
+end
+
 struct Form:
     member id: felt
     member name: felt
@@ -8,11 +13,11 @@ struct Form:
 end
 
 struct Question:
-    member description: felt
-    member optionA: felt
-    member optionB: felt
-    member optionC: felt
-    member optionD: felt
+    member description: Id_IPFS
+    member optionA: Id_IPFS
+    member optionB: Id_IPFS
+    member optionC: Id_IPFS
+    member optionD: Id_IPFS
     member option_correct_hash: felt
 end
 
@@ -24,3 +29,4 @@ struct Row:
     member nickname: felt
     member score: felt
 end
+

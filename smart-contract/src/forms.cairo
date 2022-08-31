@@ -14,7 +14,7 @@ from starkware.cairo.common.math import (
 )
 from starkware.cairo.common.hash import hash2
 
-from src.common.utils import Question, Form, Row
+from src.common.utils import Question, Form, Row, Id_IPFS
 
 #
 # Constants
@@ -445,12 +445,14 @@ func _calculate_score{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
     # user response
     let (answer_user_id) = answer_users_form.read(caller_address, id_form, idx)
     let (question: Question) = questions.read(id_form, idx)
-    let (answer_user) = _get_answer_for_id(question, answer_user_id)
+    let (answer_user: Id_IPFS) = _get_answer_for_id(question, answer_user_id)
 
     # generate the hash to the user response
-    let (answer_user_hash) = hash2{hash_ptr=pedersen_ptr}(answer_user, secret)
+    let (correct_opt_hash) = hash2{hash_ptr=pedersen_ptr}(answer_user.high, answer_user.low)
+    let (final_hash) = hash2{hash_ptr=pedersen_ptr}(correct_opt_hash, secret)
+
     local t
-    if answer_user_hash == question.option_correct_hash:
+    if final_hash == question.option_correct_hash:
         t = 5
     else:
         t = 0
@@ -548,7 +550,13 @@ func _recurse_view_question{
     end
 
     let (record : Question) = questions.read(id_form, idx)
-    assert arr[idx] = Question(record.description, record.optionA, record.optionB, record.optionC, record.optionD, record.option_correct_hash)
+    assert arr[idx] = Question(
+                    Id_IPFS(record.description.high, record.description.low),
+                    Id_IPFS(record.optionA.high, record.optionA.low),
+                    Id_IPFS(record.optionB.high, record.optionB.low), 
+                    Id_IPFS(record.optionC.high, record.optionC.low), 
+                    Id_IPFS(record.optionD.high, record.optionD.low), 
+                    record.option_correct_hash)
 
     _recurse_view_question(id_form, len, arr, idx + 1)
     return ()
@@ -591,7 +599,13 @@ func _recurse_view_question_dto{
     end
 
     let (record : Question) = questions.read(id_form, idx)
-    assert arr[idx] = Question(record.description, record.optionA, record.optionB, record.optionC, record.optionD, record.option_correct_hash)
+    assert arr[idx] = Question(
+                    Id_IPFS(record.description.high, record.description.low),
+                    Id_IPFS(record.optionA.high, record.optionA.low),
+                    Id_IPFS(record.optionB.high, record.optionB.low), 
+                    Id_IPFS(record.optionC.high, record.optionC.low), 
+                    Id_IPFS(record.optionD.high, record.optionD.low), 
+                    record.option_correct_hash)
 
     _recurse_view_question_dto(id_form, len, arr, idx + 1)
     return ()
@@ -639,21 +653,25 @@ end
 
 func _get_answer_for_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     question : Question, id_answer : felt
-) -> (correct_answer : felt):
-    tempvar answer_user : felt
+) -> (correct_answer: Id_IPFS):
+    # tempvar answer_user: Id_IPFS
     if id_answer == 0:
-        answer_user = question.optionA
+        # answer_user = question.optionA
+        return (question.optionA)
     end
     if id_answer == 1:
-        answer_user = question.optionB
+        # answer_user = question.optionB
+        return (question.optionB)
     end
     if id_answer == 2:
-        answer_user = question.optionC
+        # answer_user = question.optionC
+        return (question.optionC)
     end
-    if id_answer == 3:
-        answer_user = question.optionD
-    end
-    return (answer_user)
+    # if id_answer == 3:
+        # answer_user = question.optionD
+    return (question.optionD)
+    # end
+    # return (answer_user)
 end
 
 func _add_a_questions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -666,11 +684,11 @@ func _add_a_questions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
         return ()
     end
 
-    let description = [dquestions].description
-    let optionA = [dquestions].optionA
-    let optionB = [dquestions].optionB
-    let optionC = [dquestions].optionC
-    let optionD = [dquestions].optionD
+    let description = Id_IPFS([dquestions].description.high, [dquestions].description.low)
+    let optionA = Id_IPFS([dquestions].optionA.high, [dquestions].optionA.low)
+    let optionB = Id_IPFS([dquestions].optionB.high, [dquestions].optionB.low)
+    let optionC = Id_IPFS([dquestions].optionC.high, [dquestions].optionC.low)
+    let optionD = Id_IPFS([dquestions].optionD.high, [dquestions].optionD.low)
     let option_correct_hash = [dquestions].option_correct_hash
     
     questions.write(
