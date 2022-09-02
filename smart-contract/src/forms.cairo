@@ -533,7 +533,8 @@ func _recurse_my_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_c
     let (form: Form) = forms.read(index)
     # If the form is created by me, I save it in the array.
     if  form.created_at == user_address:
-        assert arr[idx] = Form(form.id, form.name, form.created_at, form.status, form.secret_hash, form.secret)
+        assert arr[idx] = form
+        # assert arr[idx] = Form(form.id, form.name, form.created_at, form.status, form.secret_hash, form.secret)
         _recurse_my_forms(user_address, index + 1, len, arr, idx + 1)
         return ()
     else:
@@ -550,13 +551,15 @@ func _recurse_view_question{
     end
 
     let (record : Question) = questions.read(id_form, idx)
-    assert arr[idx] = Question(
-                    Id_IPFS(record.description.high, record.description.low),
-                    Id_IPFS(record.optionA.high, record.optionA.low),
-                    Id_IPFS(record.optionB.high, record.optionB.low), 
-                    Id_IPFS(record.optionC.high, record.optionC.low), 
-                    Id_IPFS(record.optionD.high, record.optionD.low), 
-                    record.option_correct_hash)
+    assert arr[idx] = record
+                    
+    # assert arr[idx] = Question(
+    #                 Id_IPFS(record.description.high, record.description.low),
+    #                 Id_IPFS(record.optionA.high, record.optionA.low),
+    #                 Id_IPFS(record.optionB.high, record.optionB.low), 
+    #                 Id_IPFS(record.optionC.high, record.optionC.low), 
+    #                 Id_IPFS(record.optionD.high, record.optionD.low), 
+    #                 record.option_correct_hash)
 
     _recurse_view_question(id_form, len, arr, idx + 1)
     return ()
@@ -599,13 +602,15 @@ func _recurse_view_question_dto{
     end
 
     let (record : Question) = questions.read(id_form, idx)
-    assert arr[idx] = Question(
-                    Id_IPFS(record.description.high, record.description.low),
-                    Id_IPFS(record.optionA.high, record.optionA.low),
-                    Id_IPFS(record.optionB.high, record.optionB.low), 
-                    Id_IPFS(record.optionC.high, record.optionC.low), 
-                    Id_IPFS(record.optionD.high, record.optionD.low), 
-                    record.option_correct_hash)
+    assert arr[idx] = record
+    
+    # assert arr[idx] = Question(
+    #                 Id_IPFS(record.description.high, record.description.low),
+    #                 Id_IPFS(record.optionA.high, record.optionA.low),
+    #                 Id_IPFS(record.optionB.high, record.optionB.low), 
+    #                 Id_IPFS(record.optionC.high, record.optionC.low), 
+    #                 Id_IPFS(record.optionD.high, record.optionD.low), 
+    #                 record.option_correct_hash)
 
     _recurse_view_question_dto(id_form, len, arr, idx + 1)
     return ()
@@ -684,25 +689,31 @@ func _add_a_questions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
         return ()
     end
 
-    let description = Id_IPFS([dquestions].description.high, [dquestions].description.low)
-    let optionA = Id_IPFS([dquestions].optionA.high, [dquestions].optionA.low)
-    let optionB = Id_IPFS([dquestions].optionB.high, [dquestions].optionB.low)
-    let optionC = Id_IPFS([dquestions].optionC.high, [dquestions].optionC.low)
-    let optionD = Id_IPFS([dquestions].optionD.high, [dquestions].optionD.low)
-    let option_correct_hash = [dquestions].option_correct_hash
+    # let description = Id_IPFS([dquestions].description.high, [dquestions].description.low)
+    # let optionA = Id_IPFS([dquestions].optionA.high, [dquestions].optionA.low)
+    # let optionB = Id_IPFS([dquestions].optionB.high, [dquestions].optionB.low)
+    # let optionC = Id_IPFS([dquestions].optionC.high, [dquestions].optionC.low)
+    # let optionD = Id_IPFS([dquestions].optionD.high, [dquestions].optionD.low)
+    # let option_correct_hash = [dquestions].option_correct_hash
     
     questions.write(
         id_form,
         id_question,
-        Question(
-        description,
-        optionA,
-        optionB,
-        optionC,
-        optionD,
-        option_correct_hash
-        )
+        [dquestions]
     )
+
+    # questions.write(
+    #     id_form,
+    #     id_question,
+    #     Question(
+    #     description,
+    #     optionA,
+    #     optionB,
+    #     optionC,
+    #     optionD,
+    #     option_correct_hash
+    #     )
+    # )
 
     _add_a_questions(id_form, id_question + 1, dquestions_len - 1, dquestions + Question.SIZE)
     return ()
