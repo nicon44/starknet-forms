@@ -9,7 +9,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { hash } from "starknet";
 import { BigNumberish, toHex } from "starknet/utils/number";
 import { useFormContract } from "../hooks/useFormContract";
-import IQuestion from "../model/question";
 import convertCorrectOption from "../utils/convertCorrectOption";
 import IpfsUtils from "../utils/IpfsUtils";
 import responseToString from "../utils/responseToString";
@@ -182,50 +181,28 @@ const CreateForm: React.FC = () => {
     for (let i = 0; i < questions.length; i++) {
       const question = questions[i]
       const uploadedDescription = await ipfsUtils.upload(question.description)
-/*       const uploadedOptionA = await ipfsUpload(question.optionA)
-      const uploadedOptionB = await ipfsUpload(question.optionB)
-      const uploadedOptionC = await ipfsUpload(question.optionC)
-      const uploadedOptionD = await ipfsUpload(question.optionD) */
-      const descriptionHigh = uploadedDescription.slice(0,24)
-      const descriptionLow = uploadedDescription.slice(24,uploadedDescription.length)
+      const uploadedOptionA = await ipfsUtils.upload(question.optionA)
+      const uploadedOptionB = await ipfsUtils.upload(question.optionB)
+      const uploadedOptionC = await ipfsUtils.upload(question.optionC)
+      const uploadedOptionD = await ipfsUtils.upload(question.optionD)
 
       const newQuestion = {
-        description: {
-          high: stringToHex(descriptionHigh),
-          low: stringToHex(descriptionLow)
-        },
-        optionA: stringToHex(question.optionA),
-        optionB: stringToHex(question.optionB),
-        optionC: stringToHex(question.optionC),
-        optionD: stringToHex(question.optionD),
-        /*         optionA: stringToHex(uploadedOptionA),
-        optionB: stringToHex(uploadedOptionB),
-        optionC: stringToHex(uploadedOptionC),
-        optionD: stringToHex(uploadedOptionD), */
-        option_correct_hash: getOptionCorrectHash(question),
+        description: ipfsUtils.getSplitObject(uploadedDescription),
+        optionA: ipfsUtils.getSplitObject(uploadedOptionA),
+        optionB: ipfsUtils.getSplitObject(uploadedOptionB),
+        optionC: ipfsUtils.getSplitObject(uploadedOptionC),
+        optionD: ipfsUtils.getSplitObject(uploadedOptionD),
+        option_correct_hash: getOptionCorrectHash(question.optionCorrect, [uploadedOptionA, uploadedOptionB, uploadedOptionC, uploadedOptionD]),
       };
       questionsCopy.push(newQuestion)
     }
     return questionsCopy
   };
 
-  const getOptionCorrectHash = (question: any) => {
-    let correctOption;
-    switch (question.optionCorrect) {
-      case 0:
-        correctOption = stringToHex(question.optionA);
-        break;
-      case 1:
-        correctOption = stringToHex(question.optionB);
-        break;
-      case 2:
-        correctOption = stringToHex(question.optionC);
-        break;
-      case 3:
-        correctOption = stringToHex(question.optionD);
-        break;
-    }
-    return hash.pedersen([correctOption, stringToHex(secret)]);
+  const getOptionCorrectHash = (optionCorrect: number, uploadedOptions: string[]) => {
+    const correctOptionSplit = ipfsUtils.getSplitObject(uploadedOptions[optionCorrect])
+    const correctOptionHash = hash.pedersen([correctOptionSplit.high, correctOptionSplit.low])
+    return hash.pedersen([correctOptionHash, stringToHex(secret)]);
   };
 
   const handleInputChange = (event: any, setFunction: any) => {
@@ -326,7 +303,7 @@ const CreateForm: React.FC = () => {
   return (
     <>
       <Row>
-        <Col md="8">
+        <Col md="7">
           {isEditing ? <h4>Editing form {id}:</h4> : <h4>Your form:</h4>}
           <Form onSubmit={handleSubmit}>
             <Form.Label>Name *</Form.Label>
@@ -342,7 +319,7 @@ const CreateForm: React.FC = () => {
                 return (
                   <div key={question.description}>
                     <Form.Label>
-                      Question {index + 1}
+                      <span className="bold">Question {index + 1}</span>
                       <span onClick={editHandler(index)} className="icon">
                         <FaEdit />
                       </span>
@@ -351,13 +328,13 @@ const CreateForm: React.FC = () => {
                       </span>
                     </Form.Label>
                     <ul key={question.description}>
-                      <li>Description: {question.description}</li>
-                      <li>Option A: {question.optionA}</li>
-                      <li>Option B: {question.optionB}</li>
-                      <li>Option C: {question.optionC}</li>
-                      <li>Option D: {question.optionD}</li>
+                      <li className="mb-3"><span className="bold">Description:</span> {question.description}</li>
+                      <li className="mb-3"><span className="bold">Option A:</span> {question.optionA}</li>
+                      <li className="mb-3"><span className="bold">Option B:</span> {question.optionB}</li>
+                      <li className="mb-3"><span className="bold">Option C:</span> {question.optionC}</li>
+                      <li className="mb-3"><span className="bold">Option D:</span> {question.optionD}</li>
                       <li>
-                        Correct Option:{" "}
+                        <span className="bold">Correct Option:</span>{" "}
                         {convertCorrectOption(question.optionCorrect)}
                       </li>
                     </ul>
@@ -406,7 +383,7 @@ const CreateForm: React.FC = () => {
             </div>
           </Form>
         </Col>
-        <Col md="4">
+        <Col md="5">
           {!editing() && <h4>Add new question</h4>}
           {editing() && <h4>Edit question {editingId! + 1}</h4>}
           <Form id="form" onSubmit={addQuestionHandler}>
@@ -420,28 +397,32 @@ const CreateForm: React.FC = () => {
             />
             <Form.Label>Option A: </Form.Label>
             <Form.Control
-              type="text"
+              as="textarea"
+              rows={3}
               required
               value={optionA}
               onChange={(event) => handleInputChange(event, setOptionA)}
             />
             <Form.Label>Option B: </Form.Label>
             <Form.Control
-              type="text"
+              as="textarea"
+              rows={3}
               required
               value={optionB}
               onChange={(event) => handleInputChange(event, setOptionB)}
             />
             <Form.Label>Option C: </Form.Label>
             <Form.Control
-              type="text"
+              as="textarea"
+              rows={3}
               required
               value={optionC}
               onChange={(event) => handleInputChange(event, setOptionC)}
             />
             <Form.Label>Option D: </Form.Label>
             <Form.Control
-              type="text"
+              as="textarea"
+              rows={3}
               required
               value={optionD}
               onChange={(event) => handleInputChange(event, setOptionD)}

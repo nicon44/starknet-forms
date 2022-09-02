@@ -35,13 +35,17 @@ const CompleteForm = (props: {
       if (formResult[0] instanceof Array) {
         for (let item of formResult[0]) {
           const description = await getFromIpfs(item.description)
+          const optionA = await getFromIpfs(item.optionA)
+          const optionB = await getFromIpfs(item.optionB)
+          const optionC = await getFromIpfs(item.optionC)
+          const optionD = await getFromIpfs(item.optionD)
           let question: IQuestion = {
             id: description,
             description: description,
-            optionA: responseToString(item.optionA),
-            optionB: responseToString(item.optionB),
-            optionC: responseToString(item.optionC),
-            optionD: responseToString(item.optionD),
+            optionA: optionA,
+            optionB: optionB,
+            optionC: optionC,
+            optionD: optionD,
             selectedOption: undefined,
           };
           form.push(question);

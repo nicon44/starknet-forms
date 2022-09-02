@@ -32,3 +32,7 @@
 .badge {
   padding: 6px 12px !important;
 }
+
+.bold {
+  font-weight: bold;
+}

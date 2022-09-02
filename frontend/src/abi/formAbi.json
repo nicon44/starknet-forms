@@ -46,31 +46,31 @@
       {
         "name": "optionA",
         "offset": 2,
-        "type": "felt"
+        "type": "Id_IPFS"
       },
       {
         "name": "optionB",
-        "offset": 3,
-        "type": "felt"
+        "offset": 4,
+        "type": "Id_IPFS"
       },
       {
         "name": "optionC",
-        "offset": 4,
-        "type": "felt"
+        "offset": 6,
+        "type": "Id_IPFS"
       },
       {
         "name": "optionD",
-        "offset": 5,
-        "type": "felt"
+        "offset": 8,
+        "type": "Id_IPFS"
       },
       {
         "name": "option_correct_hash",
-        "offset": 6,
+        "offset": 10,
         "type": "felt"
       }
     ],
     "name": "Question",
-    "size": 7,
+    "size": 11,
     "type": "struct"
   },
   {

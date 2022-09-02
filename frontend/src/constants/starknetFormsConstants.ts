@@ -1,0 +1,1 @@
+export const IPFS_LIMIT = 24

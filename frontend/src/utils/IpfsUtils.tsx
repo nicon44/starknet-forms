@@ -1,5 +1,11 @@
 import { create, IPFSHTTPClient } from "ipfs-http-client";
+import { IPFS_LIMIT } from "../constants/starknetFormsConstants";
+import stringToHex from "./stringToHex";
 
+export interface ISplitObject {
+  high: string,
+  low: string
+}
 export default class IpfsUtils {
   ipfs: IPFSHTTPClient | undefined;
 
@@ -31,5 +37,12 @@ export default class IpfsUtils {
       chunks.push(chunk);
     }
     return new TextDecoder().decode(chunks[0].buffer);
+  }
+
+  getSplitObject(ipfsId: string): ISplitObject {
+    return {
+      high: stringToHex(ipfsId.slice(0, IPFS_LIMIT)),
+      low: stringToHex(ipfsId.slice(IPFS_LIMIT, ipfsId.length))
+    }
   }
 }
