@@ -1,5 +1,5 @@
 import { useStarknetCall, useStarknetInvoke } from "@starknet-react/core";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
@@ -9,11 +9,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { hash } from "starknet";
 import { BigNumberish, toHex } from "starknet/utils/number";
 import { useFormContract } from "../hooks/useFormContract";
+import { getFormQuestions } from "../starknet/getFormQuestions";
 import convertCorrectOption from "../utils/convertCorrectOption";
 import IpfsUtils from "../utils/IpfsUtils";
 import responseToString from "../utils/responseToString";
 import stringToHex from "../utils/stringToHex";
 import "./CreateForm.css";
+import Loader from "./utils/Loader";
 
 const CreateForm: React.FC = () => {
 
@@ -36,7 +38,7 @@ const CreateForm: React.FC = () => {
   const [optionB, setOptionB] = useState("");
   const [optionC, setOptionC] = useState("");
   const [optionD, setOptionD] = useState("");
-  const [optionCorrect, setOptionCorrect] = useState<number | null>(null);
+  const [correctOption, setCorrectOption] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [secret, setSecret] = useState("");
   const [correctSecret, setCorrectSecret] = useState(false);
@@ -51,7 +53,7 @@ const CreateForm: React.FC = () => {
 
   const handleRadioChange = (event: any) => {
     const value = event.target.value;
-    setOptionCorrect(+value);
+    setCorrectOption(+value);
   };
 
   const handleSwitchChange = (event: any) => {
@@ -114,66 +116,20 @@ const CreateForm: React.FC = () => {
       }
     }
   }, [formData]);
-
-  const calculateCorrectOption = (question: any) => {
-    const correctOptionHashed: BigNumberish = toHex(
-      question.option_correct
-    );
-    if (
-      correctOptionHashed ===
-      hash.pedersen([toHex(question.optionA), stringToHex(secret)])
-    ) {
-      return 0;
-    } else if (
-      correctOptionHashed ===
-      hash.pedersen([toHex(question.optionB), stringToHex(secret)])
-    ) {
-      return 1;
-    } else if (
-      correctOptionHashed ===
-      hash.pedersen([toHex(question.optionC), stringToHex(secret)])
-    ) {
-      return 2;
-    } else if (
-      correctOptionHashed ===
-      hash.pedersen([toHex(question.optionD), stringToHex(secret)])
-    ) {
-      return 3;
-    } else {
-      return 99;
-    }
-  };
-
-  useMemo(() => {
-    if (formResult && formResult.length > 0) {
-      let form = [];
-      if (formResult[0] instanceof Array) {
-        for (let item of formResult[0]) {
-          let question: any = {
-            id: responseToString(item.description),
-            description: responseToString(item.description),
-            optionA: responseToString(item.optionA),
-            optionB: responseToString(item.optionB),
-            optionC: responseToString(item.optionC),
-            optionD: responseToString(item.optionD),
-            optionCorrect: calculateCorrectOption(item),
-          };
-          form.push(question);
-        }
-      }
-      setQuestions(form);
-      return form;
-    }
-  }, [formResult, secret]);
-
+  
   const handleSecretSubmit = (event: any) => {
     setInvalidSecret(false);
     event.preventDefault();
-    if (questions[0].optionCorrect >= 0 && questions[0].optionCorrect <= 3) {
-      setCorrectSecret(true);
-    } else {
-      setInvalidSecret(true);
-    }
+
+    getFormQuestions(formResult!, secret).then((response) => {
+      setQuestions(response);
+      if (response[0].correctOption! >= 0 && response[0].correctOption! <= 3) {
+        setCorrectSecret(true);
+      } else {
+        setInvalidSecret(true);
+      }
+    });
+    console.log(questions)
   };
 
   const getHexQuestions = async () => {
@@ -192,15 +148,15 @@ const CreateForm: React.FC = () => {
         optionB: ipfsUtils.getSplitObject(uploadedOptionB),
         optionC: ipfsUtils.getSplitObject(uploadedOptionC),
         optionD: ipfsUtils.getSplitObject(uploadedOptionD),
-        option_correct: getOptionCorrectHash(question.optionCorrect, [uploadedOptionA, uploadedOptionB, uploadedOptionC, uploadedOptionD]),
+        option_correct: getOptionCorrectHash(question.correctOption, [uploadedOptionA, uploadedOptionB, uploadedOptionC, uploadedOptionD]),
       };
       questionsCopy.push(newQuestion)
     }
     return questionsCopy
   };
 
-  const getOptionCorrectHash = (optionCorrect: number, uploadedOptions: string[]) => {
-    const correctOptionSplit = ipfsUtils.getSplitObject(uploadedOptions[optionCorrect])
+  const getOptionCorrectHash = (correctOption: number, uploadedOptions: string[]) => {
+    const correctOptionSplit = ipfsUtils.getSplitObject(uploadedOptions[correctOption])
     const correctOptionHash = hash.pedersen([correctOptionSplit.high, correctOptionSplit.low])
     return hash.pedersen([correctOptionHash, stringToHex(secret)]);
   };
@@ -218,7 +174,7 @@ const CreateForm: React.FC = () => {
       optionB,
       optionC,
       optionD,
-      optionCorrect,
+      correctOption,
     };
     if (!editing()) {
       setQuestions((prevQuestions: any) => {
@@ -251,7 +207,7 @@ const CreateForm: React.FC = () => {
     setOptionB(editingQuestion.optionB);
     setOptionC(editingQuestion.optionC);
     setOptionD(editingQuestion.optionD);
-    setOptionCorrect(editingQuestion.optionCorrect);
+    setCorrectOption(editingQuestion.correctOption);
   };
 
   const handleCancel = () => {
@@ -266,7 +222,7 @@ const CreateForm: React.FC = () => {
     setOptionB("");
     setOptionC("");
     setOptionD("");
-    setOptionCorrect(null);
+    setCorrectOption(null);
   };
 
   const editing = () => {
@@ -335,7 +291,7 @@ const CreateForm: React.FC = () => {
                       <li className="mb-3"><span className="bold">Option D:</span> {question.optionD}</li>
                       <li>
                         <span className="bold">Correct Option:</span>{" "}
-                        {convertCorrectOption(question.optionCorrect)}
+                        {convertCorrectOption(question.correctOption)}
                       </li>
                     </ul>
                   </div>
@@ -433,7 +389,7 @@ const CreateForm: React.FC = () => {
               label="A"
               type="radio"
               value="0"
-              checked={optionCorrect === 0}
+              checked={correctOption === 0}
               name="correctOption"
               onChange={handleRadioChange}
             />
@@ -442,7 +398,7 @@ const CreateForm: React.FC = () => {
               label="B"
               type="radio"
               value="1"
-              checked={optionCorrect === 1}
+              checked={correctOption === 1}
               name="correctOption"
               onChange={handleRadioChange}
             />
@@ -451,7 +407,7 @@ const CreateForm: React.FC = () => {
               label="C"
               type="radio"
               value="2"
-              checked={optionCorrect === 2}
+              checked={correctOption === 2}
               name="correctOption"
               onChange={handleRadioChange}
             />
@@ -460,7 +416,7 @@ const CreateForm: React.FC = () => {
               label="D"
               type="radio"
               value="3"
-              checked={optionCorrect === 3}
+              checked={correctOption === 3}
               name="correctOption"
               onChange={handleRadioChange}
             />
