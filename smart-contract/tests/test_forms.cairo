@@ -18,6 +18,7 @@ from src.forms import create_form
 from src.forms import send_answer
 from src.forms import close_forms
 from src.forms import view_score_form_user
+from src.forms import view_score_form
 
 @external
 func test_dale{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
@@ -56,6 +57,10 @@ func test_dale{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
     let (user) = get_caller_address()
     let (point) = view_score_form_user(id_form, user)
     assert point = 2
+
+    let (records_len : felt, records : Row*) = view_score_form(id_form)
+    assert records[0].correct_count = 2
+    assert records[0].incorrect_count = 0
 
     # let secret = 'hola'
     # let (index) = _get_index_option_correct(array[0], secret)

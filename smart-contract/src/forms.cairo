@@ -184,10 +184,11 @@ func view_score_form{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
     alloc_locals
 
     let (records : Row*) = alloc()
-    let (count) = count_users_form.read(id_form)
-    _recurse_view_answers_records(id_form, count, records, 0)
+    let (user_count) = count_users_form.read(id_form)
+    let (question_count) = questions_count.read(id_form)
+    _recurse_view_answers_records(id_form, user_count, records, 0, question_count)
 
-    return (count, records)
+    return (user_count, records)
 end
 
 @view
@@ -403,6 +404,7 @@ func close_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 
     let (count_users) = count_users_form.read(id_form)
     let (count_question) = questions_count.read(id_form)
+    _updated_option_correct(id_form, count_question, 0, secret)
     _close_forms(id_form, count_users, count_question, secret)
     _change_status_close_form(id_form, form.name, form.secret_hash, secret)
 
@@ -419,8 +421,6 @@ func _close_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
     if count_users == 0:
         return ()
     end
-
-    _updated_option_correct(id_form, count_question, 0, secret)
     
     let (user) = users_form.read(id_form, count_users - 1)
     let (point) = _calculate_score(id_form, count_question, 0, user)
@@ -662,7 +662,7 @@ end
 
 func _recurse_view_answers_records{
     syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(id_form : felt, len : felt, arr : Row*, idx : felt) -> ():
+}(id_form : felt, len : felt, arr : Row*, idx : felt, question_count : felt) -> ():
     if idx == len:
         return ()
     end
@@ -671,9 +671,9 @@ func _recurse_view_answers_records{
     let (correct) = points_users_form.read(user, id_form)
     let (nickname) = nickname_users_form.read(user, id_form)
     let (form: Form) = forms.read(id_form)
-    assert arr[idx] = Row(id_form, form.name, form.status ,user, nickname, correct, len - correct)
+    assert arr[idx] = Row(id_form, form.name, form.status ,user, nickname, correct, question_count - correct)
 
-    _recurse_view_answers_records(id_form, len, arr, idx + 1)
+    _recurse_view_answers_records(id_form, len, arr, idx + 1, question_count)
     return ()
 end
 
@@ -735,7 +735,8 @@ func _recurse_my_score_forms_completed{syscall_ptr : felt*, pedersen_ptr : HashB
         let (correct) = points_users_form.read(user_address, index)
         let (nickname) = nickname_users_form.read(user_address, index)
         let (form: Form) = forms.read(index)
-        assert records[idx] = Row(index, form.name, form.status ,user_address, nickname, correct, len - correct)
+        let (question_count) = questions_count.read(index)
+        assert records[idx] = Row(index, form.name, form.status ,user_address, nickname, correct, question_count - correct)
         _recurse_my_score_forms_completed(user_address, index + 1, len - 1, records, idx + 1)
         return()
     else:
