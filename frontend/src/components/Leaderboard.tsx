@@ -2,6 +2,7 @@ import { useStarknet, useStarknetCall } from "@starknet-react/core";
 import { useMemo, useState } from "react";
 import { Table } from "react-bootstrap";
 import { useFormContract } from "../hooks/useFormContract";
+import getScore from "../utils/getScore";
 import responseToString from "../utils/responseToString";
 import './Leaderboard.css'
 const Leaderboard: React.FC<{ formId: number }> = ({
@@ -27,7 +28,7 @@ const Leaderboard: React.FC<{ formId: number }> = ({
         innerLeaderboard.push({
           nickname: responseToString(item.nickname),
           wallet: "0x..." + account.slice(account.length - 6),
-          score: +item['score']?.toString(10),
+          score: getScore(+item["correct_count"]?.toString(10), +item["incorrect_count"]?.toString(10)),
         });
       }
       innerLeaderboard.sort((a, b) => b.score - a.score);
@@ -50,7 +51,7 @@ const Leaderboard: React.FC<{ formId: number }> = ({
             <tr key={item.wallet} className={item.wallet === account ? 'my-wallet' : ''}>
               <td>{item.nickname}</td>
               <td>{item.wallet}</td>
-              <td>{item.score}</td>
+              <td>{item.score}%</td>
             </tr>
           );
         })}

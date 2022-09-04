@@ -10,6 +10,7 @@ import Table from "react-bootstrap/Table";
 import { FaRegListAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useFormContract } from "../hooks/useFormContract";
+import getScore from "../utils/getScore";
 import responseToString from "../utils/responseToString";
 import "./MyForms.css";
 import Loader from "./utils/Loader";
@@ -54,10 +55,6 @@ const MyResults = () => {
       )
     );
   }, [transactions]);
-  
-  const getScore = (correct: number, incorrect: number):number => {
-    return Math.round(((correct / (correct + incorrect)) * 100))
-  }
 
   useMemo(() => {
     if (myFormsResult && myFormsResult.length > 0) {
