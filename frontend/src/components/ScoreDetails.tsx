@@ -68,7 +68,7 @@ const ScoreDetails: React.FC = () => {
       }
     });
     return {
-      percentage: (correctAnswers / totalQuestions) * 100,
+      percentage: Math.round((correctAnswers / totalQuestions) * 100),
       correctAnswers,
       totalQuestions,
     };

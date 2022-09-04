@@ -55,8 +55,8 @@ const MyResults = () => {
     );
   }, [transactions]);
   
-  const getScore = (correct: number, incorrect: number) => {
-    return (correct / (correct + incorrect)) * 100
+  const getScore = (correct: number, incorrect: number):number => {
+    return Math.round(((correct / (correct + incorrect)) * 100))
   }
 
   useMemo(() => {
