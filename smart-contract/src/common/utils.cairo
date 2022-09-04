@@ -18,7 +18,7 @@ struct Question:
     member optionB: Id_IPFS
     member optionC: Id_IPFS
     member optionD: Id_IPFS
-    member option_correct_hash: felt
+    member option_correct: felt
 end
 
 struct Row:
@@ -27,6 +27,7 @@ struct Row:
     member status: felt
     member user: felt
     member nickname: felt
-    member score: felt
+    member correct_count: felt
+    member incorrect_count: felt
 end
 
