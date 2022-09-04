@@ -184,10 +184,11 @@ func view_score_form{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
     alloc_locals
 
     let (records : Row*) = alloc()
-    let (count) = count_users_form.read(id_form)
-    _recurse_view_answers_records(id_form, count, records, 0)
+    let (user_count) = count_users_form.read(id_form)
+    let (question_count) = questions_count.read(id_form)
+    _recurse_view_answers_records(id_form, user_count, records, 0, question_count)
 
-    return (count, records)
+    return (user_count, records)
 end
 
 @view
@@ -403,6 +404,7 @@ func close_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 
     let (count_users) = count_users_form.read(id_form)
     let (count_question) = questions_count.read(id_form)
+    _updated_option_correct(id_form, count_question, 0, secret)
     _close_forms(id_form, count_users, count_question, secret)
     _change_status_close_form(id_form, form.name, form.secret_hash, secret)
 
@@ -419,45 +421,103 @@ func _close_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
     if count_users == 0:
         return ()
     end
-
+    
     let (user) = users_form.read(id_form, count_users - 1)
-    let (point) = _calculate_score(id_form, count_question, 0, user, secret)
+    let (point) = _calculate_score(id_form, count_question, 0, user)
     points_users_form.write(user, id_form, point)
     _close_forms(id_form, count_users - 1, count_question, secret)
     return ()
 end
 
+# actualizar respuesta correcta en la pregunta
+func _updated_option_correct{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    id_form: felt, 
+    count_answer: felt, 
+    idx: felt, 
+    secret: felt
+) -> ():
+    alloc_locals
+    if count_answer == 0:
+        return ()
+    end
+
+    let (question: Question) = questions.read(id_form, idx)
+    let (index) = _get_index_option_correct(question, secret)
+    # actualizar pregunta
+    questions.write(id_form, idx, Question(
+        question.description,
+        question.optionA,
+        question.optionB,
+        question.optionC,
+        question.optionD,
+        index
+    ))
+
+    _updated_option_correct(id_form, count_answer - 1, idx + 1, secret)
+    return ()
+end
+
+
+func _get_index_option_correct{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    question: Question,
+    secret: felt
+) -> (index: felt):
+    
+    let (correct_opt_hash1) = hash2{hash_ptr=pedersen_ptr}(question.optionA.high, question.optionA.low)
+    let (final_hash1) = hash2{hash_ptr=pedersen_ptr}(correct_opt_hash1, secret)
+    if final_hash1 == question.option_correct:
+        return (0)
+    end
+    
+    let (correct_opt_hash2) = hash2{hash_ptr=pedersen_ptr}(question.optionB.high, question.optionB.low)
+    let (final_hash2) = hash2{hash_ptr=pedersen_ptr}(correct_opt_hash2, secret)
+    if final_hash2 == question.option_correct:
+        return (1)
+    end
+
+    let (correct_opt_hash3) = hash2{hash_ptr=pedersen_ptr}(question.optionC.high, question.optionC.low)
+    let (final_hash3) = hash2{hash_ptr=pedersen_ptr}(correct_opt_hash3, secret)
+    if final_hash3 == question.option_correct:
+        return (2)
+    end
+    return(3)
+end
+
+# BORRADOR
+@view
+func get_index_option_correct{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    option_high: felt,
+    option_low: felt,
+    secret: felt
+) -> (index: felt):
+    
+    let (correct_opt_hash1) = hash2{hash_ptr=pedersen_ptr}(option_high, option_low)
+    let (final_hash1) = hash2{hash_ptr=pedersen_ptr}(correct_opt_hash1, secret)
+    return (final_hash1)
+end
+
+#calcular los puntos
 func _calculate_score{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     id_form: felt, 
     count_answer: felt, 
     idx: felt, 
-    caller_address: felt,
-    secret: felt
+    caller_address: felt
 ) -> (points: felt):
     alloc_locals
     if count_answer == 0:
         return (0)
     end
 
-    # correct answer -> question.option_correct_hash
     let (question: Question) = questions.read(id_form, idx)
-
-    # user response
     let (answer_user_id) = answer_users_form.read(caller_address, id_form, idx)
-    let (question: Question) = questions.read(id_form, idx)
-    let (answer_user: Id_IPFS) = _get_answer_for_id(question, answer_user_id)
-
-    # generate the hash to the user response
-    let (correct_opt_hash) = hash2{hash_ptr=pedersen_ptr}(answer_user.high, answer_user.low)
-    let (final_hash) = hash2{hash_ptr=pedersen_ptr}(correct_opt_hash, secret)
 
     local t
-    if final_hash == question.option_correct_hash:
-        t = 5
+    if answer_user_id == question.option_correct:
+        t = 1
     else:
         t = 0
     end
-    let (local total) = _calculate_score(id_form, count_answer - 1, idx + 1, caller_address, secret)
+    let (local total) = _calculate_score(id_form, count_answer - 1, idx + 1, caller_address)
     let res = t + total
     return (res)
 end
@@ -533,7 +593,7 @@ func _recurse_my_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_c
     let (form: Form) = forms.read(index)
     # If the form is created by me, I save it in the array.
     if  form.created_at == user_address:
-        assert arr[idx] = Form(form.id, form.name, form.created_at, form.status, form.secret_hash, form.secret)
+        assert arr[idx] = form
         _recurse_my_forms(user_address, index + 1, len, arr, idx + 1)
         return ()
     else:
@@ -550,13 +610,7 @@ func _recurse_view_question{
     end
 
     let (record : Question) = questions.read(id_form, idx)
-    assert arr[idx] = Question(
-                    Id_IPFS(record.description.high, record.description.low),
-                    Id_IPFS(record.optionA.high, record.optionA.low),
-                    Id_IPFS(record.optionB.high, record.optionB.low), 
-                    Id_IPFS(record.optionC.high, record.optionC.low), 
-                    Id_IPFS(record.optionD.high, record.optionD.low), 
-                    record.option_correct_hash)
+    assert arr[idx] = record
 
     _recurse_view_question(id_form, len, arr, idx + 1)
     return ()
@@ -571,7 +625,7 @@ func _recurse_view_correct_form_answers{
 
     let (question: Question) = questions.read(id_form, idx)
     #estaria bueno una vez cerrado retornar un array con las posiciones de las respuestas correctas
-    assert arr[idx] = question.option_correct_hash
+    assert arr[idx] = question.option_correct
 
     _recurse_view_correct_form_answers(id_form, len, arr, idx + 1)
     return ()
@@ -599,13 +653,7 @@ func _recurse_view_question_dto{
     end
 
     let (record : Question) = questions.read(id_form, idx)
-    assert arr[idx] = Question(
-                    Id_IPFS(record.description.high, record.description.low),
-                    Id_IPFS(record.optionA.high, record.optionA.low),
-                    Id_IPFS(record.optionB.high, record.optionB.low), 
-                    Id_IPFS(record.optionC.high, record.optionC.low), 
-                    Id_IPFS(record.optionD.high, record.optionD.low), 
-                    record.option_correct_hash)
+    assert arr[idx] = record
 
     _recurse_view_question_dto(id_form, len, arr, idx + 1)
     return ()
@@ -614,18 +662,18 @@ end
 
 func _recurse_view_answers_records{
     syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(id_form : felt, len : felt, arr : Row*, idx : felt) -> ():
+}(id_form : felt, len : felt, arr : Row*, idx : felt, question_count : felt) -> ():
     if idx == len:
         return ()
     end
 
     let (user: felt) = users_form.read(id_form, idx)
-    let (point) = points_users_form.read(user, id_form)
+    let (correct) = points_users_form.read(user, id_form)
     let (nickname) = nickname_users_form.read(user, id_form)
     let (form: Form) = forms.read(id_form)
-    assert arr[idx] = Row(id_form, form.name, form.status ,user, nickname, point)
+    assert arr[idx] = Row(id_form, form.name, form.status ,user, nickname, correct, question_count - correct)
 
-    _recurse_view_answers_records(id_form, len, arr, idx + 1)
+    _recurse_view_answers_records(id_form, len, arr, idx + 1, question_count)
     return ()
 end
 
@@ -651,29 +699,6 @@ func _recurse_add_answers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, rang
     return ()
 end
 
-func _get_answer_for_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    question : Question, id_answer : felt
-) -> (correct_answer: Id_IPFS):
-    # tempvar answer_user: Id_IPFS
-    if id_answer == 0:
-        # answer_user = question.optionA
-        return (question.optionA)
-    end
-    if id_answer == 1:
-        # answer_user = question.optionB
-        return (question.optionB)
-    end
-    if id_answer == 2:
-        # answer_user = question.optionC
-        return (question.optionC)
-    end
-    # if id_answer == 3:
-        # answer_user = question.optionD
-    return (question.optionD)
-    # end
-    # return (answer_user)
-end
-
 func _add_a_questions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     id_form : felt,
     id_question : felt,
@@ -684,24 +709,10 @@ func _add_a_questions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
         return ()
     end
 
-    let description = Id_IPFS([dquestions].description.high, [dquestions].description.low)
-    let optionA = Id_IPFS([dquestions].optionA.high, [dquestions].optionA.low)
-    let optionB = Id_IPFS([dquestions].optionB.high, [dquestions].optionB.low)
-    let optionC = Id_IPFS([dquestions].optionC.high, [dquestions].optionC.low)
-    let optionD = Id_IPFS([dquestions].optionD.high, [dquestions].optionD.low)
-    let option_correct_hash = [dquestions].option_correct_hash
-    
     questions.write(
         id_form,
         id_question,
-        Question(
-        description,
-        optionA,
-        optionB,
-        optionC,
-        optionD,
-        option_correct_hash
-        )
+        [dquestions]
     )
 
     _add_a_questions(id_form, id_question + 1, dquestions_len - 1, dquestions + Question.SIZE)
@@ -721,10 +732,11 @@ func _recurse_my_score_forms_completed{syscall_ptr : felt*, pedersen_ptr : HashB
 
     let (bool) = check_users_form.read(user_address, index)
     if bool == TRUE:
-        let (point) = points_users_form.read(user_address, index)
+        let (correct) = points_users_form.read(user_address, index)
         let (nickname) = nickname_users_form.read(user_address, index)
         let (form: Form) = forms.read(index)
-        assert records[idx] = Row(index, form.name, form.status ,user_address, nickname, point)
+        let (question_count) = questions_count.read(index)
+        assert records[idx] = Row(index, form.name, form.status ,user_address, nickname, correct, question_count - correct)
         _recurse_my_score_forms_completed(user_address, index + 1, len - 1, records, idx + 1)
         return()
     else:
