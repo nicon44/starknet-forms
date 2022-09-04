@@ -1,0 +1,21 @@
+.score-details .selected {
+  background-color: rgb(190, 231, 255);
+  color: rgb(46, 124, 170);
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+.score-details .regular {
+  color: rgb(134, 134, 134)
+}
+
+.incorrect {
+  font-weight: bold;
+  color:rgb(204, 3, 3)
+}
+
+.correct {
+  font-weight: bold;
+  color: green;
+}

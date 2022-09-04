@@ -7,6 +7,7 @@ import Home from "./Home";
 import "./Main.css";
 import MyForms from "./MyForms";
 import MyResults from "./MyResults";
+import ScoreDetails from "./ScoreDetails";
 
 export default function Main() {
   const { account } = useStarknet();
@@ -22,6 +23,7 @@ export default function Main() {
           <Route path="/edit-form/:id" element={<CreateForm />} />
           <Route path="/my-forms" element={<MyForms />} />
           <Route path="/my-results" element={<MyResults />} />
+          <Route path="/score-details/:id" element={<ScoreDetails />} />
         </Routes>
       ) : (
         <>

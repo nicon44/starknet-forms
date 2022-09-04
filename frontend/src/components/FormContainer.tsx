@@ -22,7 +22,7 @@ const FormContainer = () => {
     setFormId(id);
   };
 
-  const submitHandler = (nickname: string, result: string) => {
+  const submitHandler = (nickname: string, result: string[]) => {
     const args = [formId, stringToHex(nickname), result];
     invoke({ args })
       .then((response) => {

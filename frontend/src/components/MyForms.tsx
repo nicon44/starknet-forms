@@ -16,7 +16,6 @@ import {
   FaShareAlt,
   FaTimes,
 } from "react-icons/fa";
-import { TailSpin } from "react-loader-spinner";
 import { useNavigate } from "react-router-dom";
 import { useFormContract } from "../hooks/useFormContract";
 import responseToString from "../utils/responseToString";
@@ -24,6 +23,7 @@ import CloseModal from "./CloseModal";
 import "./MyForms.css";
 import ResultsModal from "./ResultsModal";
 import ShareModal from "./ShareModal";
+import Loader from "./utils/Loader";
 
 interface FormRow {
   id: number;
@@ -58,6 +58,8 @@ const MyForms = () => {
 
   const [pendingTransactions, setPendingTransactions] = useState<any[]>([]);
 
+  const [loading, setLoading] = useState(true)
+
   useEffect(() => {
     setPendingTransactions(
       transactions.filter(
@@ -74,6 +76,7 @@ const MyForms = () => {
 
   useMemo(() => {
     if (myFormsResult && myFormsResult.length > 0) {
+      setLoading(false)
       if (myFormsResult[0] instanceof Array) {
         const resultMap = myFormsResult[0].map((item) => {
           return {
@@ -112,6 +115,10 @@ const MyForms = () => {
   const editHandler = (id: number) => () => {
     navigate("/edit-form/" + id);
   };
+
+  if (loading) {
+    return <Loader size={45} />
+  }
 
   return (
     <>
@@ -233,15 +240,7 @@ const MyForms = () => {
           </p>
         );
       })}
-      {pendingTransactions.length > 0 && (
-        <TailSpin
-          height="25"
-          width="25"
-          radius="9"
-          color="black"
-          ariaLabel="loading"
-        />
-      )}
+      {pendingTransactions.length > 0 && <Loader />}
       {myForms.length > 0 && (
         <>
           <h5 className="mt-5">Reference</h5>

@@ -117,7 +117,7 @@ const CreateForm: React.FC = () => {
 
   const calculateCorrectOption = (question: any) => {
     const correctOptionHashed: BigNumberish = toHex(
-      question.option_correct_hash
+      question.option_correct
     );
     if (
       correctOptionHashed ===
@@ -192,7 +192,7 @@ const CreateForm: React.FC = () => {
         optionB: ipfsUtils.getSplitObject(uploadedOptionB),
         optionC: ipfsUtils.getSplitObject(uploadedOptionC),
         optionD: ipfsUtils.getSplitObject(uploadedOptionD),
-        option_correct_hash: getOptionCorrectHash(question.optionCorrect, [uploadedOptionA, uploadedOptionB, uploadedOptionC, uploadedOptionD]),
+        option_correct: getOptionCorrectHash(question.optionCorrect, [uploadedOptionA, uploadedOptionB, uploadedOptionC, uploadedOptionD]),
       };
       questionsCopy.push(newQuestion)
     }
@@ -370,7 +370,7 @@ const CreateForm: React.FC = () => {
                 You need to add questions to create a form.
               </p>
             )}
-            <div className="mt-3">
+            <div className="mt-3 mb-3">
               {isEditing ? (
                 <Button variant="success" disabled={questions.length === 0} type="submit">
                   UPDATE FORM

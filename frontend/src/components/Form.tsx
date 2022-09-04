@@ -1,17 +1,16 @@
 import { useStarknetCall } from "@starknet-react/core";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useFormContract } from "../hooks/useFormContract";
 import IQuestion from "../model/question";
-import IpfsUtils from "../utils/IpfsUtils";
-import responseToString from "../utils/responseToString";
+import { getFormQuestions } from "../starknet/getFormQuestions";
+import Loader from "./utils/Loader";
 
 const CompleteForm = (props: {
   id: number;
-  onSubmit: (nickname: string, result: string) => void;
+  onSubmit: (nickname: string, result: string[]) => void;
 }) => {
-  const ipfsUtils = new IpfsUtils();
   const { contract: test } = useFormContract();
 
   const { data: formResult } = useStarknetCall({
@@ -21,46 +20,23 @@ const CompleteForm = (props: {
     options: { watch: false },
   });
 
-  const [form, setForm] = useState<any>();
-  const [nickname, setNickname] = useState('')
+  const [loading, setLoading] = useState(true);
+  const [nickname, setNickname] = useState("");
+  const [form, setForm] = useState<IQuestion[]>([]);
 
-  const getFromIpfs = async (item: any) => {
-    const response = await ipfsUtils.download(responseToString(item.high)+responseToString(item.low))
-    return response;
-  }
-
-  useMemo(async () => {
-    if (formResult && formResult.length > 0) {
-      let form = [];
-      if (formResult[0] instanceof Array) {
-        for (let item of formResult[0]) {
-          const description = await getFromIpfs(item.description)
-          const optionA = await getFromIpfs(item.optionA)
-          const optionB = await getFromIpfs(item.optionB)
-          const optionC = await getFromIpfs(item.optionC)
-          const optionD = await getFromIpfs(item.optionD)
-          let question: IQuestion = {
-            id: description,
-            description: description,
-            optionA: optionA,
-            optionB: optionB,
-            optionC: optionC,
-            optionD: optionD,
-            selectedOption: undefined,
-          };
-          form.push(question);
-        }
-      }
-      setForm(form);
-      return form;
+  useEffect(() => {
+    if (loading && formResult && formResult.length > 0) {
+      getFormQuestions(formResult).then((response) => {
+        setForm(response);
+        setLoading(false);
+      });
     }
-  }, [formResult]);
-
+  }, [formResult, loading]);
 
   const handleSubmit = (event: any) => {
     event.preventDefault();
     const result = form.map((item: IQuestion) => {
-      return item.selectedOption;
+      return item.selectedOption!.toString();
     });
     props.onSubmit(nickname, result);
   };
@@ -76,8 +52,12 @@ const CompleteForm = (props: {
     });
   };
 
-  const handleNameChange = (event:any) => {
-    setNickname(event.target.value)
+  const handleNameChange = (event: any) => {
+    setNickname(event.target.value);
+  };
+
+  if (loading) {
+    return <Loader size={45} />;
   }
 
   return (
@@ -87,11 +67,7 @@ const CompleteForm = (props: {
         {form && form.length > 0 && (
           <>
             <Form.Label>Your name *</Form.Label>
-            <Form.Control
-              type="text"
-              required
-              onChange={handleNameChange}
-            />
+            <Form.Control type="text" required onChange={handleNameChange} />
           </>
         )}
         {form && form.length > 0 ? (

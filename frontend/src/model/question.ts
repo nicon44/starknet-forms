@@ -6,4 +6,5 @@ export default interface IQuestion {
   optionC: string;
   optionD: string;
   selectedOption: string | undefined;
+  correctOption?: number;
 }

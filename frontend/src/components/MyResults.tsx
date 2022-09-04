@@ -3,12 +3,16 @@ import {
   useStarknetCall,
   useStarknetTransactionManager,
 } from "@starknet-react/core";
+import RcTooltip from "rc-tooltip";
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "react-bootstrap";
 import Table from "react-bootstrap/Table";
-import { TailSpin } from "react-loader-spinner";
+import { FaRegListAlt } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { useFormContract } from "../hooks/useFormContract";
 import responseToString from "../utils/responseToString";
 import "./MyForms.css";
+import Loader from "./utils/Loader";
 
 interface FormRow {
   id: number;
@@ -20,6 +24,9 @@ interface FormRow {
 const MyResults = () => {
   const { contract: test } = useFormContract();
   const { account } = useStarknet();
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true)
 
   const [myForms, setMyForms] = useState<FormRow[]>([]);
 
@@ -47,16 +54,21 @@ const MyResults = () => {
       )
     );
   }, [transactions]);
+  
+  const getScore = (correct: number, incorrect: number) => {
+    return (correct / (correct + incorrect)) * 100
+  }
 
   useMemo(() => {
     if (myFormsResult && myFormsResult.length > 0) {
+      setLoading(false)
       if (myFormsResult[0] instanceof Array) {
         const resultMap = myFormsResult[0].map((item) => {
           return {
             id: +item.id_form,
             name: responseToString(item.name),
-            score: +item['score']?.toString(10),
-            status: responseToString(item.status)
+            score: getScore(+item["correct_count"]?.toString(10), +item["incorrect_count"]?.toString(10)),
+            status: responseToString(item.status),
           };
         });
         setMyForms(resultMap);
@@ -64,6 +76,14 @@ const MyResults = () => {
       }
     }
   }, [myFormsResult]);
+
+  const viewDetailsHandler = (id: number) => () => {
+    navigate("/score-details/" + id);
+  };
+
+  if (loading) {
+    return <Loader size={45} />
+  }
 
   return (
     <>
@@ -76,6 +96,7 @@ const MyResults = () => {
               <th>Form name</th>
               <th>Form status</th>
               <th>Score</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -93,7 +114,26 @@ const MyResults = () => {
                       {item.status.toUpperCase()}
                     </span>
                   </td>
-                  <td>{item.status.toUpperCase() === 'CLOSED' ? item.score : 'Form not closed'}</td>
+                  <td>
+                    {item.status.toUpperCase() === "CLOSED"
+                      ? item.score + '%'
+                      : "Form not closed"}
+                  </td>
+                  <td>
+                    {item.status.toUpperCase() === "CLOSED" && (
+                      <RcTooltip
+                        placement="bottom"
+                        overlay={<span>Score details of form {item.id}</span>}
+                      >
+                        <Button
+                          className="mr-1 action"
+                          onClick={viewDetailsHandler(item.id)}
+                        >
+                          <FaRegListAlt />
+                        </Button>
+                      </RcTooltip>
+                    )}
+                  </td>
                 </tr>
               );
             })}
@@ -114,15 +154,7 @@ const MyResults = () => {
           </p>
         );
       })}
-      {pendingTransactions.length > 0 && (
-        <TailSpin
-          height="25"
-          width="25"
-          radius="9"
-          color="black"
-          ariaLabel="loading"
-        />
-      )}
+      {pendingTransactions.length > 0 && <Loader />}
     </>
   );
 };

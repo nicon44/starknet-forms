@@ -64,7 +64,7 @@
         "type": "Id_IPFS"
       },
       {
-        "name": "option_correct_hash",
+        "name": "option_correct",
         "offset": 10,
         "type": "felt"
       }
@@ -118,13 +118,18 @@
         "type": "felt"
       },
       {
-        "name": "score",
+        "name": "correct_count",
         "offset": 5,
+        "type": "felt"
+      },
+      {
+        "name": "incorrect_count",
+        "offset": 6,
         "type": "felt"
       }
     ],
     "name": "Row",
-    "size": 6,
+    "size": 7,
     "type": "struct"
   },
   {
@@ -520,6 +525,31 @@
     ],
     "name": "close_forms",
     "outputs": [],
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "option_high",
+        "type": "felt"
+      },
+      {
+        "name": "option_low",
+        "type": "felt"
+      },
+      {
+        "name": "secret",
+        "type": "felt"
+      }
+    ],
+    "name": "get_index_option_correct",
+    "outputs": [
+      {
+        "name": "index",
+        "type": "felt"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

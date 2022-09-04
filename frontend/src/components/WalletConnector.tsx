@@ -56,11 +56,11 @@ const WalletConnector = () => {
 const WalletConnectorModal = (props: any) => {
   const { available, connect } = useConnectors();
   const argentX =
-    available && available.find((connector) => connector.id() === "argent-x");
+    available && available.find((connector) => connector.id().toLowerCase().includes("argent"));
   const braavos =
-    available && available.find((connector) => connector.id() === "braavos");
+    available && available.find((connector) => connector.id().toLowerCase().includes("braavos"));
   const others =
-    available && available.filter((connector) => connector.id() !== "braavos" && connector.id() !== "argent-x");
+    available && available.filter((connector) => !connector.id().toLowerCase().includes("braavos") && !connector.id().toLowerCase().includes("argent"));
   const connectWallet = (connector: any) => () => {
     connect(connector);
     localStorage.setItem(LS_WALLET, connector.options?.id);
@@ -109,7 +109,7 @@ const WalletConnectorModal = (props: any) => {
               );
             })}
         </div>
-        {!argentX && !braavos && (
+        {available.length === 0 && (
           <p className="center mt-3">
             No wallets found <br />
             Please install one of the above to continue
