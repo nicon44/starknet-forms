@@ -11,7 +11,7 @@ import { FaCheck, FaTimes } from "react-icons/fa";
 const OPTIONS = ["A", "B", "C", "D"];
 
 const ScoreDetails: React.FC = () => {
-  const { id } = useParams();
+  const { id, wallet } = useParams();
   const { contract: test } = useFormContract();
   const { account } = useStarknet();
 
@@ -40,7 +40,7 @@ const ScoreDetails: React.FC = () => {
   const { data: userAnswers } = useStarknetCall({
     contract: test,
     method: "view_users_form_answers",
-    args: [+id!, account],
+    args: [+id!, wallet ? wallet : account],
     options: { watch: false },
   });
 
@@ -80,7 +80,7 @@ const ScoreDetails: React.FC = () => {
 
   return (
     <>
-      <h2>Your result</h2>
+      <h2>{wallet ? 'Results for wallet ' + wallet.slice(0, 6) +  '...' + wallet.slice(wallet.length - 6) : 'Your result'}</h2>
       <h3 className="mt-3">
         Score: {getScore().percentage}% ({getScore().correctAnswers}/
         {getScore().totalQuestions})

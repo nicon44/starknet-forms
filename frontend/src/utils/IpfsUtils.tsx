@@ -1,11 +1,10 @@
 import { create, IPFSHTTPClient } from "ipfs-http-client";
-import { INFURA_AUTH } from "../constants/infura-auth";
 import { IPFS_LIMIT } from "../constants/starknetFormsConstants";
 import stringToHex from "./stringToHex";
 
 export interface ISplitObject {
-  high: string;
-  low: string;
+  high: string,
+  low: string
 }
 export default class IpfsUtils {
   ipfs: IPFSHTTPClient | undefined;
@@ -17,7 +16,8 @@ export default class IpfsUtils {
       const ipfs = create({
         url: "https://ipfs.infura.io:5001",
         headers: {
-          authorization: INFURA_AUTH,
+          authorization:
+            "Basic MkR5czBaMnRKUUxuZEZGZ2pRSWd0T3VHeUVoOjJmOGNhNDVkNWI2Yzc3MDM2ZDBlNDhkOTQ1YzYxNGVh",
         },
       });
       this.ipfs = ipfs;
@@ -42,7 +42,7 @@ export default class IpfsUtils {
   getSplitObject(ipfsId: string): ISplitObject {
     return {
       high: stringToHex(ipfsId.slice(0, IPFS_LIMIT)),
-      low: stringToHex(ipfsId.slice(IPFS_LIMIT, ipfsId.length)),
-    };
+      low: stringToHex(ipfsId.slice(IPFS_LIMIT, ipfsId.length))
+    }
   }
 }
