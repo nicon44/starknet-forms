@@ -1,4 +1,5 @@
 import { create, IPFSHTTPClient } from "ipfs-http-client";
+import { INFURA_AUTH } from "../constants/infura-auth";
 import { IPFS_LIMIT } from "../constants/starknetFormsConstants";
 import stringToHex from "./stringToHex";
 
@@ -17,7 +18,7 @@ export default class IpfsUtils {
         url: "https://ipfs.infura.io:5001",
         headers: {
           authorization:
-            "Basic MkR5czBaMnRKUUxuZEZGZ2pRSWd0T3VHeUVoOjJmOGNhNDVkNWI2Yzc3MDM2ZDBlNDhkOTQ1YzYxNGVh",
+            INFURA_AUTH,
         },
       });
       this.ipfs = ipfs;
