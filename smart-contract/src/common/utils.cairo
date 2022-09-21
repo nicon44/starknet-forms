@@ -1,33 +1,32 @@
-struct Id_IPFS:
-    member high: felt
-    member low: felt
-end
+struct Id_IPFS {
+    high: felt,
+    low: felt,
+}
 
-struct Form:
-    member id: felt
-    member name: felt
-    member created_at: felt
-    member status: felt
-    member secret_hash: felt
-    member secret: felt
-end
+struct Form {
+    id: felt,
+    name: felt,
+    created_at: felt,
+    status: felt,
+    secret_hash: felt,
+    secret: felt,
+}
 
-struct Question:
-    member description: Id_IPFS
-    member optionA: Id_IPFS
-    member optionB: Id_IPFS
-    member optionC: Id_IPFS
-    member optionD: Id_IPFS
-    member option_correct: felt
-end
+struct Question {
+    description: Id_IPFS,
+    optionA: Id_IPFS,
+    optionB: Id_IPFS,
+    optionC: Id_IPFS,
+    optionD: Id_IPFS,
+    option_correct: felt,
+}
 
-struct Row:
-    member id_form: felt
-    member name: felt
-    member status: felt
-    member user: felt
-    member nickname: felt
-    member correct_count: felt
-    member incorrect_count: felt
-end
-
+struct Row {
+    id_form: felt,
+    name: felt,
+    status: felt,
+    user: felt,
+    nickname: felt,
+    correct_count: felt,
+    incorrect_count: felt,
+}
