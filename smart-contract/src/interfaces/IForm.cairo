@@ -4,7 +4,6 @@ from src.common.utils import Question, Form, Row
 
 @contract_interface
 namespace IForm {
-
     func view_form(id_form: felt) -> (form: Form) {
     }
 
@@ -45,7 +44,11 @@ namespace IForm {
     }
 
     func create_form(
-        name: felt, dquestions_len: felt, dquestions: Question*, status_open: felt, secret_hash: felt
+        name: felt,
+        dquestions_len: felt,
+        dquestions: Question*,
+        status_open: felt,
+        secret_hash: felt,
     ) -> (id_form: felt) {
     }
 

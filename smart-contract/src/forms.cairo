@@ -263,44 +263,43 @@ func create_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 }
 
 @external
-func updated_form{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func updated_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     id_form: felt,
     name: felt,
     dquestions_len: felt,
     dquestions: Question*,
     status_open: felt,
-    secret_hash: felt
-) -> (id_form: felt){
+    secret_hash: felt,
+) -> (id_form: felt) {
     alloc_locals;
 
-
     let (count) = forms_count.read();
-    with_attr error_message("Form not found"){
+    with_attr error_message("Form not found") {
         assert_in_range(id_form, 0, count);
     }
 
     let (form: Form) = forms.read(id_form);
-    
+
     let (caller_address) = get_caller_address();
-    with_attr error_message("Only the owner can modify"){
-        assert form.created_at = caller_address;        
+    with_attr error_message("Only the owner can modify") {
+        assert form.created_at = caller_address;
     }
 
-    with_attr error_message("the current state does not allow modifications"){
+    with_attr error_message("the current state does not allow modifications") {
         assert form.status = STATUS_OPEN;
     }
 
-    with_attr error_message("the number of questions must be greater than 0"){
+    with_attr error_message("the number of questions must be greater than 0") {
         assert_le(0, dquestions_len);
     }
 
-    with_attr error_message("Secret incorrect"){
+    with_attr error_message("Secret incorrect") {
         assert form.secret_hash = secret_hash;
     }
 
     _add_questions(id_form, dquestions_len, dquestions);
 
-    if (status_open == 0){
+    if (status_open == 0) {
         _change_status_ready_form(id_form, name, secret_hash);
     }
 
@@ -309,23 +308,22 @@ func updated_form{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
 }
 
 @external
-func forms_change_status_ready{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    id_form : felt
-) -> (){
-
+func forms_change_status_ready{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    id_form: felt
+) -> () {
     let (count) = forms_count.read();
-    with_attr error_message("Form not found"){
+    with_attr error_message("Form not found") {
         assert_in_range(id_form, 0, count);
     }
 
     let (form: Form) = forms.read(id_form);
-    
+
     let (caller_address) = get_caller_address();
-    with_attr error_message("Only the owner can modify"){
-        assert form.created_at = caller_address;        
+    with_attr error_message("Only the owner can modify") {
+        assert form.created_at = caller_address;
     }
 
-    with_attr error_message("the current state does not allow modifications"){
+    with_attr error_message("the current state does not allow modifications") {
         assert form.status = STATUS_OPEN;
     }
 
@@ -334,30 +332,30 @@ func forms_change_status_ready{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
 }
 
 @external
-func send_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func send_answer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     id_form: felt, nickname: felt, answers_len: felt, answers: felt*
-) -> (){
+) -> () {
     alloc_locals;
 
     let (count) = forms_count.read();
-    with_attr error_message("Form not found"){
+    with_attr error_message("Form not found") {
         assert_in_range(id_form, 0, count);
     }
 
     let (form: Form) = forms.read(id_form);
-    
-    with_attr error_message("the current state does not allow modifications"){
+
+    with_attr error_message("the current state does not allow modifications") {
         assert form.status = STATUS_READY;
     }
 
     let (count_question) = questions_count.read(id_form);
-    with_attr error_message("Length of answers must be equal to the number of questions"){
+    with_attr error_message("Length of answers must be equal to the number of questions") {
         assert answers_len = count_question;
     }
 
     let (caller_address) = get_caller_address();
     let (bool) = check_users_form.read(caller_address, id_form);
-    with_attr error_message("You have already answered this form"){
+    with_attr error_message("You have already answered this form") {
         assert bool = FALSE;
     }
 
@@ -372,25 +370,24 @@ func send_answer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 }
 
 @external
-func close_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    id_form: felt,
-    secret: felt
-) -> (){
+func close_forms{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    id_form: felt, secret: felt
+) -> () {
     alloc_locals;
 
     let (count) = forms_count.read();
-    with_attr error_message("Form not found"){
+    with_attr error_message("Form not found") {
         assert_in_range(id_form, 0, count);
     }
 
     let (form: Form) = forms.read(id_form);
-    
-    with_attr error_message("the current state does not allow modifications"){
+
+    with_attr error_message("the current state does not allow modifications") {
         assert form.status = STATUS_READY;
     }
 
     let (hash) = hash2{hash_ptr=pedersen_ptr}(secret, 0);
-    with_attr error_message("Secret incorrect"){
+    with_attr error_message("Secret incorrect") {
         assert hash = form.secret_hash;
     }
 
@@ -403,17 +400,14 @@ func close_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     return ();
 }
 
-func _close_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    id_form: felt,
-    count_users: felt,
-    count_question: felt, 
-    secret: felt
-) -> (){
+func _close_forms{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    id_form: felt, count_users: felt, count_question: felt, secret: felt
+) -> () {
     alloc_locals;
-    if (count_users == 0){
+    if (count_users == 0) {
         return ();
     }
-    
+
     let (user) = users_form.read(id_form, count_users - 1);
     let (point) = _calculate_score(id_form, count_question, 0, user);
     points_users_form.write(user, id_form, point);
@@ -422,81 +416,79 @@ func _close_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
 }
 
 // actualizar respuesta correcta en la pregunta
-func _updated_option_correct{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    id_form: felt, 
-    count_answer: felt, 
-    idx: felt, 
-    secret: felt
-) -> (){
+func _updated_option_correct{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    id_form: felt, count_answer: felt, idx: felt, secret: felt
+) -> () {
     alloc_locals;
-    if (count_answer == 0){
+    if (count_answer == 0) {
         return ();
     }
 
     let (question: Question) = questions.read(id_form, idx);
     let (index) = _get_index_option_correct(question, secret);
     // actualizar pregunta
-    questions.write(id_form, idx, Question(
+    questions.write(
+        id_form,
+        idx,
+        Question(
         question.description,
         question.optionA,
         question.optionB,
         question.optionC,
         question.optionD,
         index
-    ));
+        ),
+    );
 
     _updated_option_correct(id_form, count_answer - 1, idx + 1, secret);
     return ();
 }
 
-
-func _get_index_option_correct{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    question: Question,
-    secret: felt
-) -> (index: felt){
-    
-    let (correct_opt_hash1) = hash2{hash_ptr=pedersen_ptr}(question.optionA.high, question.optionA.low);
+func _get_index_option_correct{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    question: Question, secret: felt
+) -> (index: felt) {
+    let (correct_opt_hash1) = hash2{hash_ptr=pedersen_ptr}(
+        question.optionA.high, question.optionA.low
+    );
     let (final_hash1) = hash2{hash_ptr=pedersen_ptr}(correct_opt_hash1, secret);
-    if (final_hash1 == question.option_correct){
+    if (final_hash1 == question.option_correct) {
         return (0,);
     }
-    
-    let (correct_opt_hash2) = hash2{hash_ptr=pedersen_ptr}(question.optionB.high, question.optionB.low);
+
+    let (correct_opt_hash2) = hash2{hash_ptr=pedersen_ptr}(
+        question.optionB.high, question.optionB.low
+    );
     let (final_hash2) = hash2{hash_ptr=pedersen_ptr}(correct_opt_hash2, secret);
-    if (final_hash2 == question.option_correct){
+    if (final_hash2 == question.option_correct) {
         return (1,);
     }
 
-    let (correct_opt_hash3) = hash2{hash_ptr=pedersen_ptr}(question.optionC.high, question.optionC.low);
+    let (correct_opt_hash3) = hash2{hash_ptr=pedersen_ptr}(
+        question.optionC.high, question.optionC.low
+    );
     let (final_hash3) = hash2{hash_ptr=pedersen_ptr}(correct_opt_hash3, secret);
-    if (final_hash3 == question.option_correct){
+    if (final_hash3 == question.option_correct) {
         return (2,);
     }
-    return(3,);
+    return (3,);
 }
 
 // BORRADOR
 @view
-func get_index_option_correct{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    option_high: felt,
-    option_low: felt,
-    secret: felt
-) -> (index: felt){
-    
+func get_index_option_correct{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    option_high: felt, option_low: felt, secret: felt
+) -> (index: felt) {
     let (correct_opt_hash1) = hash2{hash_ptr=pedersen_ptr}(option_high, option_low);
     let (final_hash1) = hash2{hash_ptr=pedersen_ptr}(correct_opt_hash1, secret);
     return (final_hash1,);
 }
 
 // calcular los puntos
-func _calculate_score{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    id_form: felt, 
-    count_answer: felt, 
-    idx: felt, 
-    caller_address: felt
-) -> (points: felt){
+func _calculate_score{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    id_form: felt, count_answer: felt, idx: felt, caller_address: felt
+) -> (points: felt) {
     alloc_locals;
-    if (count_answer == 0){
+    if (count_answer == 0) {
         return (0,);
     }
 
@@ -504,7 +496,7 @@ func _calculate_score{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
     let (answer_user_id) = answer_users_form.read(caller_address, id_form, idx);
 
     local t;
-    if (answer_user_id == question.option_correct){
+    if (answer_user_id == question.option_correct) {
         t = 1;
     } else {
         t = 0;
@@ -519,10 +511,8 @@ func _calculate_score{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
 //
 
 func _create_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    name: felt,
-    secret_hash: felt
-) -> (id_form : felt){
-
+    name: felt, secret_hash: felt
+) -> (id_form: felt) {
     let (id_form) = forms_count.read();
     let (caller_address) = get_caller_address();
     forms.write(id_form, Form(id_form, name, caller_address, STATUS_OPEN, secret_hash, 0));
@@ -531,31 +521,24 @@ func _create_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_pt
 }
 
 func _change_status_ready_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    id_form: felt, 
-    name: felt,
-    secret_hash: felt
-) -> (){
+    id_form: felt, name: felt, secret_hash: felt
+) -> () {
     let (caller_address) = get_caller_address();
     forms.write(id_form, Form(id_form, name, caller_address, STATUS_READY, secret_hash, 0));
     return ();
 }
 
-func  _change_status_close_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    id_form: felt, 
-    name: felt,
-    secret_hash: felt,
-    secret: felt
-) -> (){
+func _change_status_close_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    id_form: felt, name: felt, secret_hash: felt, secret: felt
+) -> () {
     let (caller_address) = get_caller_address();
     forms.write(id_form, Form(id_form, name, caller_address, STATUS_CLOSED, secret_hash, secret));
     return ();
 }
 
-func _add_questions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    id_form : felt,
-    dquestions_len: felt,
-    dquestions : Question*
-) -> (){
+func _add_questions{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    id_form: felt, dquestions_len: felt, dquestions: Question*
+) -> () {
     alloc_locals;
 
     let count_question = 0;
@@ -564,44 +547,41 @@ func _add_questions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
     return ();
 }
 
-func _add_count_user_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (){
+func _add_count_user_forms{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (
+    ) {
     let (caller_address: felt) = get_caller_address();
     let (count: felt) = count_forms_by_user.read(caller_address);
     count_forms_by_user.write(caller_address, count + 1);
     return ();
 }
 
-func _recurse_my_forms{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    user_address: felt,
-    index: felt,
-    len: felt,
-    arr: Form*,
-    idx: felt
-) -> (){
-    if (index == len){
+func _recurse_my_forms{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    user_address: felt, index: felt, len: felt, arr: Form*, idx: felt
+) -> () {
+    if (index == len) {
         return ();
     }
 
     let (form: Form) = forms.read(index);
     // If the form is created by me, I save it in the array.
-    if (form.created_at == user_address){
+    if (form.created_at == user_address) {
         assert arr[idx] = form;
         _recurse_my_forms(user_address, index + 1, len, arr, idx + 1);
         return ();
-    } else{
-        _recurse_my_forms(user_address, index + 1, len , arr, idx);
+    } else {
+        _recurse_my_forms(user_address, index + 1, len, arr, idx);
         return ();
     }
 }
 
-func _recurse_view_question{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(id_form : felt, len : felt, arr : Question*, idx : felt) -> (){
-    if (idx == len){
+func _recurse_view_question{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    id_form: felt, len: felt, arr: Question*, idx: felt
+) -> () {
+    if (idx == len) {
         return ();
     }
 
-    let (record : Question) = questions.read(id_form, idx);
+    let (record: Question) = questions.read(id_form, idx);
     assert arr[idx] = record;
 
     _recurse_view_question(id_form, len, arr, idx + 1);
@@ -609,9 +589,9 @@ func _recurse_view_question{
 }
 
 func _recurse_view_correct_form_answers{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(id_form : felt, len : felt, arr : felt*, idx : felt) -> (){
-    if (idx == len){
+    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
+}(id_form: felt, len: felt, arr: felt*, idx: felt) -> () {
+    if (idx == len) {
         return ();
     }
 
@@ -624,9 +604,9 @@ func _recurse_view_correct_form_answers{
 }
 
 func _recurse_view_users_form_answers{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(id_form : felt, len : felt, arr : felt*, idx : felt, caller_address: felt) -> (){
-    if (idx == len){
+    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
+}(id_form: felt, len: felt, arr: felt*, idx: felt, caller_address: felt) -> () {
+    if (idx == len) {
         return ();
     }
 
@@ -637,25 +617,24 @@ func _recurse_view_users_form_answers{
     return ();
 }
 
-func _recurse_view_question_dto{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(id_form : felt, len : felt, arr : Question*, idx : felt) -> (){
-    if (idx == len){
+func _recurse_view_question_dto{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    id_form: felt, len: felt, arr: Question*, idx: felt
+) -> () {
+    if (idx == len) {
         return ();
     }
 
-    let (record : Question) = questions.read(id_form, idx);
+    let (record: Question) = questions.read(id_form, idx);
     assert arr[idx] = record;
 
     _recurse_view_question_dto(id_form, len, arr, idx + 1);
     return ();
 }
 
-
-func _recurse_view_answers_records{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(id_form : felt, len : felt, arr : Row*, idx : felt, question_count : felt) -> (){
-    if (idx == len){
+func _recurse_view_answers_records{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    id_form: felt, len: felt, arr: Row*, idx: felt, question_count: felt
+) -> () {
+    if (idx == len) {
         return ();
     }
 
@@ -663,99 +642,87 @@ func _recurse_view_answers_records{
     let (correct) = points_users_form.read(user, id_form);
     let (nickname) = nickname_users_form.read(user, id_form);
     let (form: Form) = forms.read(id_form);
-    assert arr[idx] = Row(id_form, form.name, form.status ,user, nickname, correct, question_count - correct);
+    assert arr[idx] = Row(id_form, form.name, form.status, user, nickname, correct, question_count - correct);
 
     _recurse_view_answers_records(id_form, len, arr, idx + 1, question_count);
     return ();
 }
 
-func _recurse_add_answers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    id_form : felt, len : felt, arr : felt*, idx : felt, caller_address: felt
-) -> (){
+func _recurse_add_answers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    id_form: felt, len: felt, arr: felt*, idx: felt, caller_address: felt
+) -> () {
     alloc_locals;
-    if (len == 0){
+    if (len == 0) {
         return ();
     }
 
-    tempvar answer_user : felt;
+    tempvar answer_user: felt;
     answer_user = cast([arr], felt);
-    
+
     // 0 >= answer <= 3
-    with_attr error_message("The option must be between 0 and 3"){
+    with_attr error_message("The option must be between 0 and 3") {
         assert_in_range(answer_user, 0, 4);
     }
-    
+
     answer_users_form.write(caller_address, id_form, idx, answer_user);
 
     _recurse_add_answers(id_form, len - 1, arr + 1, idx + 1, caller_address);
     return ();
 }
 
-func _add_a_questions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    id_form : felt,
-    id_question : felt,
-    dquestions_len: felt,
-    dquestions : Question*
-) -> (){
-    if (dquestions_len == 0){
+func _add_a_questions{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    id_form: felt, id_question: felt, dquestions_len: felt, dquestions: Question*
+) -> () {
+    if (dquestions_len == 0) {
         return ();
     }
 
-    questions.write(
-        id_form,
-        id_question,
-        [dquestions]
-    );
+    questions.write(id_form, id_question, [dquestions]);
 
     _add_a_questions(id_form, id_question + 1, dquestions_len - 1, dquestions + Question.SIZE);
     return ();
 }
 
-func _recurse_my_score_forms_completed{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    user_address: felt,
-    index: felt,
-    len: felt,
-    records: Row*,
-    idx: felt
-) -> (){
-    if (len == 0){
-        return();
+func _recurse_my_score_forms_completed{
+    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
+}(user_address: felt, index: felt, len: felt, records: Row*, idx: felt) -> () {
+    if (len == 0) {
+        return ();
     }
 
     let (bool) = check_users_form.read(user_address, index);
-    if (bool == TRUE){
+    if (bool == TRUE) {
         let (correct) = points_users_form.read(user_address, index);
         let (nickname) = nickname_users_form.read(user_address, index);
         let (form: Form) = forms.read(index);
         let (question_count) = questions_count.read(index);
-        assert records[idx] = Row(index, form.name, form.status ,user_address, nickname, correct, question_count - correct);
+        assert records[idx] = Row(index, form.name, form.status, user_address, nickname, correct, question_count - correct);
         _recurse_my_score_forms_completed(user_address, index + 1, len - 1, records, idx + 1);
-        return();
-    } else{
+        return ();
+    } else {
         _recurse_my_score_forms_completed(user_address, index + 1, len - 1, records, idx);
-        return();
+        return ();
     }
 }
 
-func _recurse_count_my_score_forms_completed{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    user_address: felt,
-    index: felt,
-    len: felt,
-    records: Row*
-) -> (len: felt){
+func _recurse_count_my_score_forms_completed{
+    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
+}(user_address: felt, index: felt, len: felt, records: Row*) -> (len: felt) {
     alloc_locals;
-    if (len == 0){
-        return(0,);
+    if (len == 0) {
+        return (0,);
     }
 
     let (bool) = check_users_form.read(user_address, index);
     local t;
-    if (bool == TRUE){
+    if (bool == TRUE) {
         t = 1;
-    } else{
+    } else {
         t = 0;
     }
-    let (local total) = _recurse_count_my_score_forms_completed(user_address, index + 1, len - 1, records);
+    let (local total) = _recurse_count_my_score_forms_completed(
+        user_address, index + 1, len - 1, records
+    );
     let res = t + total;
     return (res,);
 }
