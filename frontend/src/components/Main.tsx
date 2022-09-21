@@ -24,6 +24,7 @@ export default function Main() {
           <Route path="/my-forms" element={<MyForms />} />
           <Route path="/my-results" element={<MyResults />} />
           <Route path="/score-details/:id" element={<ScoreDetails />} />
+          <Route path="/score-details/:id/:wallet" element={<ScoreDetails />} />
         </Routes>
       ) : (
         <>

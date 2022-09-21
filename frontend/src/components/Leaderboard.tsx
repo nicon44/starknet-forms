@@ -1,14 +1,17 @@
 import { useStarknet, useStarknetCall } from "@starknet-react/core";
 import { useMemo, useState } from "react";
-import { Table } from "react-bootstrap";
+import { Button, Table } from "react-bootstrap";
 import { useFormContract } from "../hooks/useFormContract";
 import getScore from "../utils/getScore";
 import responseToString from "../utils/responseToString";
-import './Leaderboard.css'
-const Leaderboard: React.FC<{ formId: number }> = ({
-  formId,
-}) => {
+import "./Leaderboard.css";
+import RcTooltip from "rc-tooltip";
+import { FaRegListAlt } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+
+const Leaderboard: React.FC<{ formId: number }> = ({ formId }) => {
   const { contract: test } = useFormContract();
+  const navigate = useNavigate();
 
   const { data: leaderboardResult } = useStarknetCall({
     contract: test,
@@ -24,17 +27,24 @@ const Leaderboard: React.FC<{ formId: number }> = ({
     if (leaderboardResult && leaderboardResult.length > 0) {
       let innerLeaderboard = [];
       for (let item of leaderboardResult[0]) {
-        const account = item['user'].toString(16);
+        const account = item["user"].toString(16);
         innerLeaderboard.push({
           nickname: responseToString(item.nickname),
-          wallet: "0x..." + account.slice(account.length - 6),
-          score: getScore(+item["correct_count"]?.toString(10), +item["incorrect_count"]?.toString(10)),
+          wallet: "0x" + account,
+          score: getScore(
+            +item["correct_count"]?.toString(10),
+            +item["incorrect_count"]?.toString(10)
+          ),
         });
       }
       innerLeaderboard.sort((a, b) => b.score - a.score);
       setLeaderboard(innerLeaderboard);
     }
   }, [leaderboardResult]);
+
+  const viewDetailsHandler = (wallet: string) => () => {
+    navigate("/score-details/" + formId + "/" + wallet);
+  };
 
   return (
     <Table striped bordered hover>
@@ -47,11 +57,27 @@ const Leaderboard: React.FC<{ formId: number }> = ({
       </thead>
       <tbody>
         {leaderboard.map((item) => {
-          return  (
-            <tr key={item.wallet} className={item.wallet === account ? 'my-wallet' : ''}>
+          return (
+            <tr
+              key={item.wallet}
+              className={item.wallet === account ? "my-wallet" : ""}
+            >
               <td>{item.nickname}</td>
               <td>{item.wallet}</td>
-              <td>{item.score}%</td>
+              <td>
+                {item.score}%
+                <RcTooltip
+                  placement="bottom"
+                  overlay={<span>Score details</span>}
+                >
+                  <Button
+                    className="ml-1 action"
+                    onClick={viewDetailsHandler(item.wallet)}
+                  >
+                    <FaRegListAlt />
+                  </Button>
+                </RcTooltip>
+              </td>
             </tr>
           );
         })}

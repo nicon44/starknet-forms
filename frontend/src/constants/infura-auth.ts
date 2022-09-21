@@ -1,1 +1,0 @@
-export const INFURA_AUTH = "Basic zzz"

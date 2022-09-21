@@ -21,13 +21,18 @@ const CompleteForm = (props: {
   });
 
   const [loading, setLoading] = useState(true);
+  const [closed, setClosed] = useState(false);
   const [nickname, setNickname] = useState("");
   const [form, setForm] = useState<IQuestion[]>([]);
 
   useEffect(() => {
     if (loading && formResult && formResult.length > 0) {
       getFormQuestions(formResult).then((response) => {
-        setForm(response);
+        if (response[0]?.correctOption && !isNaN(response[0].correctOption)) {
+          setClosed(true);
+        } else {
+          setForm(response);
+        }
         setLoading(false);
       });
     }
@@ -55,6 +60,17 @@ const CompleteForm = (props: {
   const handleNameChange = (event: any) => {
     setNickname(event.target.value);
   };
+
+  if (closed) {
+    return (
+      <>
+        <p>The form {props.id} is closed. You can't complete it anymore.</p>
+        <Link to="/">
+          <Button>Go Back</Button>
+        </Link>
+      </>
+    );
+  }
 
   if (loading) {
     return <Loader size={45} />;
