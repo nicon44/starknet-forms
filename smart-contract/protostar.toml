@@ -1,16 +1,14 @@
-["protostar.config"]
-protostar_version = "0.4.2"
+[project]
+protostar-version = "0.8.1"
+lib-path = "lib"
 
-["protostar.project"]
-libs_path = "lib"
+[contracts]
+forms = ["src/forms.cairo"]
 
-["protostar.contracts"]
-forms = [
-    "src/forms.cairo",
-]
+[profile.testnet2.project]
+gateway-url="https://alpha4-2.starknet.io"
+chain-id=1536727068981429685321
 
-[profile.devnet.protostar.deploy]
-gateway-url = "http://127.0.0.1:5050/"
-
-[profile.testnet.protostar.deploy]
-network="alpha-goerli"
+[profile.devnet.project]
+gateway-url="http://127.0.0.1:5050/"
+chain-id=1536727068981429685321
