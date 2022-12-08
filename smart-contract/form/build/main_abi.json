@@ -1,0 +1,264 @@
+[
+    {
+        "members": [
+            {
+                "name": "id",
+                "offset": 0,
+                "type": "felt"
+            },
+            {
+                "name": "name",
+                "offset": 1,
+                "type": "felt"
+            },
+            {
+                "name": "created_at",
+                "offset": 2,
+                "type": "felt"
+            },
+            {
+                "name": "status",
+                "offset": 3,
+                "type": "felt"
+            }
+        ],
+        "name": "Form",
+        "size": 4,
+        "type": "struct"
+    },
+    {
+        "members": [
+            {
+                "name": "low",
+                "offset": 0,
+                "type": "felt"
+            },
+            {
+                "name": "high",
+                "offset": 1,
+                "type": "felt"
+            }
+        ],
+        "name": "Uint256",
+        "size": 2,
+        "type": "struct"
+    },
+    {
+        "inputs": [
+            {
+                "name": "form_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_form",
+        "outputs": [
+            {
+                "name": "form",
+                "type": "Form"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "form_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_forms_count",
+        "outputs": [
+            {
+                "name": "form_count",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "form_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_questions",
+        "outputs": [
+            {
+                "name": "records_len",
+                "type": "felt"
+            },
+            {
+                "name": "records",
+                "type": "Uint256*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "form_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_questions_count",
+        "outputs": [
+            {
+                "name": "questions_count",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "user_address",
+                "type": "felt"
+            }
+        ],
+        "name": "get_my_forms",
+        "outputs": [
+            {
+                "name": "records_len",
+                "type": "felt"
+            },
+            {
+                "name": "records",
+                "type": "Form*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "form_id",
+                "type": "felt"
+            },
+            {
+                "name": "user_address",
+                "type": "felt"
+            }
+        ],
+        "name": "get_answers",
+        "outputs": [
+            {
+                "name": "records_len",
+                "type": "felt"
+            },
+            {
+                "name": "records",
+                "type": "Uint256*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "name",
+                "type": "felt"
+            },
+            {
+                "name": "questions_len",
+                "type": "felt"
+            },
+            {
+                "name": "questions",
+                "type": "Uint256*"
+            },
+            {
+                "name": "status",
+                "type": "felt"
+            }
+        ],
+        "name": "form_create",
+        "outputs": [
+            {
+                "name": "form_id",
+                "type": "felt"
+            }
+        ],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "form_id",
+                "type": "felt"
+            },
+            {
+                "name": "name",
+                "type": "felt"
+            },
+            {
+                "name": "questions_len",
+                "type": "felt"
+            },
+            {
+                "name": "questions",
+                "type": "Uint256*"
+            },
+            {
+                "name": "status",
+                "type": "felt"
+            }
+        ],
+        "name": "form_update",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "form_id",
+                "type": "felt"
+            }
+        ],
+        "name": "form_ready",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "form_id",
+                "type": "felt"
+            },
+            {
+                "name": "nickname",
+                "type": "felt"
+            },
+            {
+                "name": "answers_len",
+                "type": "felt"
+            },
+            {
+                "name": "answers",
+                "type": "Uint256*"
+            }
+        ],
+        "name": "form_send_answer",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "form_id",
+                "type": "felt"
+            }
+        ],
+        "name": "form_close",
+        "outputs": [],
+        "type": "function"
+    }
+]

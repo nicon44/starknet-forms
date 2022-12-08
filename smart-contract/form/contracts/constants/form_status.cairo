@@ -1,0 +1,3 @@
+const STATUS_READY = 0;
+const STATUS_OPEN = 1;
+const STATUS_CLOSED = 2;
