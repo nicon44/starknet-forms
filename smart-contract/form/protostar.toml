@@ -1,14 +1,6 @@
 [project]
-protostar-version = "0.8.1"
+protostar-version = "0.9.0"
 lib-path = "lib"
 
 [contracts]
 main = ["contracts/main.cairo"]
-
-[profile.testnet2.project]
-gateway-url="https://alpha4-2.starknet.io"
-chain-id=1536727068981429685321
-
-[profile.devnet.project]
-gateway-url="http://127.0.0.1:5050/"
-chain-id=1536727068981429685321

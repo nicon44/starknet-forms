@@ -18,6 +18,51 @@ from contracts.types.data_types import DataTypes
 // Asserts
 //
 
+func assert_only_status_open_or_ready{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(status: felt) {
+    with_attr error_message("status can be 0 or 1") {
+        assert_in_range(status, 0, 2);
+    }
+    return();
+}
+
+func assert_only_status_open{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(status: felt) {
+    with_attr error_message("the current state does not allow modifications") {
+        assert status = STATUS_OPEN;
+    }
+    return();
+}
+
+func assert_only_status_ready{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(status: felt) {
+    with_attr error_message("the current state does not allow modifications") {
+        assert status = STATUS_READY;
+    }
+    return();
+}
+
+func assert_only_form_found{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(form_id: felt) {
+    let (count) = FormStorage.count_read();
+    with_attr error_message("Form not found") {
+        assert_in_range(form_id, 0, count);
+    }
+    return();
+}
+
+func assert_only_owner{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(owner: felt) {
+    let (caller_address) = get_caller_address();
+    with_attr error_message("Only the owner can modify") {
+        assert owner = caller_address;
+    }
+    return();
+}
+
+func assert_only_questions_not_empty{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(questions_count: felt) {
+    with_attr error_message("the number of questions must be greater than 0") {
+        assert_le(0, questions_count);
+    }
+    return();
+}
+
+
 //
 // Public
 //
@@ -41,36 +86,32 @@ func view_form_count{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check
     return (count,);
 }
 
-func view_row_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    form_id: felt) -> (records_len: felt, records: DataTypes.Row*) {
-    alloc_locals;
+// func view_row_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+//     form_id: felt) -> (records_len: felt, records: DataTypes.Row*) {
+//     alloc_locals;
 
-    let (records: DataTypes.Row*) = alloc();
-    let (count_users) = UserStorage.in_form_count_read(form_id);
+//     let (records: DataTypes.Row*) = alloc();
+//     let (count_users) = UserStorage.in_form_count_read(form_id);
 
-    let (count_questions) = QuestionStorage.count_read(form_id);
+//     let (count_questions) = QuestionStorage.count_read(form_id);
     
-    _recurse_view_row(form_id, count_users, records, 0, count_questions);
+//     _recurse_view_row(form_id, count_users, records, 0, count_questions);
 
-    return (count_users, records);
-}
+//     return (count_users, records);
+// }
 
 func create_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    name: felt, questions_len: felt, questions: Uint256*, status: felt)
+    name: felt, question_id: Uint256, questions_count: felt, status: felt)
     -> (form_id: felt) {
     alloc_locals;
 
     // status correct
-    with_attr error_message("status can be 0 or 1") {
-        assert_in_range(status, 0, 2);
-    }
-
-    with_attr error_message("the number of questions must be greater than 0") {
-        assert_le(0, questions_len);
-    }
+    assert_only_status_open_or_ready(status);
 
     let (local form_id) = _create_form(name);
-    _add_questions(form_id, questions_len, questions);
+    
+    QuestionStorage.list_write(form_id, question_id);
+    QuestionStorage.count_write(form_id, questions_count);
     
     if (status == STATUS_READY) {
         _change_status_ready_form(form_id, name);
@@ -84,32 +125,21 @@ func create_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 func update_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     form_id: felt,
     name: felt,
-    dquestions_len: felt,
-    dquestions: Uint256*,
+    question_id: Uint256, 
+    questions_count: felt,
     status: felt) -> () {
     alloc_locals;
 
-    let (count) = FormStorage.count_read();
-    with_attr error_message("Form not found") {
-        assert_in_range(form_id, 0, count);
-    }
+    assert_only_form_found(form_id);
 
     let (form: DataTypes.Form) = FormStorage.list_read(form_id);
 
-    let (caller_address) = get_caller_address();
-    with_attr error_message("Only the owner can modify") {
-        assert form.created_at = caller_address;
-    }
+    assert_only_owner(form.created_at);
+    assert_only_status_open(form.status);
+    assert_only_questions_not_empty(questions_count);
 
-    with_attr error_message("the current state does not allow modifications") {
-        assert form.status = STATUS_OPEN;
-    }
-
-    with_attr error_message("the number of questions must be greater than 0") {
-        assert_le(0, dquestions_len);
-    }
-
-    _add_questions(form_id, dquestions_len, dquestions);
+    QuestionStorage.list_write(form_id, question_id);
+    QuestionStorage.count_write(form_id, questions_count);
 
     if (status == STATUS_READY) {
         _change_status_ready_form(form_id, name);
@@ -120,54 +150,37 @@ func update_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 
 func forms_change_status_ready{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     form_id: felt) -> () {
-    let (count) = FormStorage.count_read();
-    with_attr error_message("Form not found") {
-        assert_in_range(form_id, 0, count);
-    }
+    
+    assert_only_form_found(form_id);
 
     let (form: DataTypes.Form) = FormStorage.list_read(form_id);
 
-    let (caller_address) = get_caller_address();
-    with_attr error_message("Only the owner can modify") {
-        assert form.created_at = caller_address;
-    }
-
-    with_attr error_message("the current state does not allow modifications") {
-        assert form.status = STATUS_OPEN;
-    }
+    assert_only_owner(form.created_at);
+    assert_only_status_open(form.status);
 
     _change_status_ready_form(form_id, form.name);
     return ();
 }
 
 func send_answer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    form_id: felt, nickname: felt, answers_len: felt, answers: Uint256*) -> () {
+    form_id: felt, nickname: felt, answer_id: Uint256) -> () {
     alloc_locals;
 
-    let (count) = FormStorage.count_read();
-    with_attr error_message("Form not found") {
-        assert_in_range(form_id, 0, count);
-    }
+    assert_only_form_found(form_id);
 
     let (form: DataTypes.Form) = FormStorage.list_read(form_id);
 
-    with_attr error_message("the current state does not allow modifications") {
-        assert form.status = STATUS_READY;
-    }
-
-    let (count_question) = QuestionStorage.count_read(form_id);
-    with_attr error_message("Length of answers must be equal to the number of questions") {
-        assert answers_len = count_question;
-    }
+    assert_only_status_ready(form.status);
 
     let (caller_address) = get_caller_address();
+    
     let (bool) = UserStorage.check_form_bool_read(caller_address, form_id);
     with_attr error_message("You have already answered this form") {
         assert bool = FALSE;
     }
 
-    _recurse_add_answers(form_id, count_question, answers, 0, caller_address);
-    
+    UserStorage.answer_form_list_write(caller_address, form_id, answer_id);
+
     UserStorage.check_form_bool_write(caller_address, form_id, TRUE);
     UserStorage.nickname_form_bool_write(caller_address, form_id, nickname);
     
@@ -184,16 +197,11 @@ func close_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}
     form_id: felt) -> () {
     alloc_locals;
 
-    let (count) = FormStorage.count_read();
-    with_attr error_message("Form not found") {
-        assert_in_range(form_id, 0, count);
-    }
+    assert_only_form_found(form_id);
 
     let (form: DataTypes.Form) = FormStorage.list_read(form_id);
 
-    with_attr error_message("the current state does not allow modifications") {
-        assert form.status = STATUS_READY;
-    }
+    assert_only_status_ready(form.status);
 
     _change_status_close_form(form_id, form.name);
 
@@ -231,44 +239,6 @@ func _change_status_close_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, r
     return ();
 }
 
-func _add_questions{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    form_id: felt, questions_len: felt, questions: Uint256*) -> () {
-    alloc_locals;
-
-    let count_question = 0;
-    _recursive_add_questions(form_id, count_question, questions_len, questions);
-    QuestionStorage.count_write(form_id, count_question + questions_len);
-    return ();
-}
-
-func _recursive_add_questions{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    form_id: felt, id_question: felt, questions_len: felt, questions: Uint256*) -> () {
-    if (questions_len == 0) {
-        return ();
-    }
-
-    QuestionStorage.list_write(form_id, id_question, [questions]);
-
-    _recursive_add_questions(form_id, id_question + 1, questions_len - 1, questions + Uint256.SIZE);
-    return ();
-}
-
-func _recurse_add_answers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    form_id: felt, len: felt, arr: Uint256*, idx: felt, caller_address: felt) -> () {
-    alloc_locals;
-    if (len == 0) {
-        return ();
-    }
-
-    // tempvar answer_user: Uint256;
-    // answer_user = cast([arr], Uint256);
-
-    UserStorage.answer_form_list_write(caller_address, form_id, idx, [arr]);
-
-    _recurse_add_answers(form_id, len - 1, arr + 1, idx + 1, caller_address);
-    return ();
-}
-
 func _recurse_view_row{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     form_id: felt, len: felt, arr: DataTypes.Row*, idx: felt, question_count: felt) -> () {
     if (idx == len) {
@@ -288,8 +258,12 @@ func _recurse_view_row{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
 
 func _add_count_user_forms{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> () {
     let (caller_address: felt) = get_caller_address();
-    let (count: felt) = UserStorage.in_form_count_read(caller_address);
-    UserStorage.in_form_count_write(caller_address, count + 1);
+    // let (count: felt) = UserStorage.in_form_count_read(caller_address);
+    // UserStorage.in_form_count_write(caller_address, count + 1);
+
+    let (count: felt) = UserStorage.created_forms_count_read(caller_address);
+    UserStorage.created_forms_count_write(caller_address, count + 1);
+
     return ();
 }
 

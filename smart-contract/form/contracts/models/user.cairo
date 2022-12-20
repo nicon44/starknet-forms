@@ -3,6 +3,8 @@
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.uint256 import Uint256
+from starkware.starknet.common.syscalls import get_caller_address
+
 
 from contracts.constants.form_status import STATUS_CLOSED, STATUS_OPEN, STATUS_READY
 from contracts.storage.form_storage import FormStorage
@@ -24,15 +26,12 @@ func view_my_forms{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_p
     return (count_forms, records);
 }
 
-func view_users_form_answers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    id_form: felt, user: felt) -> (records_len: felt, records: Uint256*) {
+func view_answer_from_user{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    id_form: felt, user: felt) -> (answer_id: Uint256) {
     alloc_locals;
-
-    let (records: Uint256*) = alloc();
-    let (count) = QuestionStorage.count_read(id_form);
-    _recurse_view_users_form_answers(id_form, count, records, 0, user);
-
-    return (count, records);
+    let (caller_address) = get_caller_address();
+    let (answer_id: Uint256) = UserStorage.answer_form_list_read(caller_address, id_form);
+    return (answer_id,);
 }
 
 //
@@ -55,18 +54,6 @@ func _recurse_my_forms{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
         _recurse_my_forms(user_address, index + 1, len, arr, idx);
         return ();
     }
-}
-
-func _recurse_view_users_form_answers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(id_form: felt, len: felt, arr: Uint256*, idx: felt, caller_address: felt) -> () {
-    if (idx == len) {
-        return ();
-    }
-
-    let (answer: Uint256) = UserStorage.answer_form_list_read(caller_address, id_form, idx);
-    assert arr[idx] = answer;
-
-    _recurse_view_users_form_answers(id_form, len, arr, idx + 1, caller_address);
-    return ();
 }
 
 func _recurse_view_answers_records{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(

@@ -31,7 +31,7 @@ func UserStorage_nickname_form_bool(user_address: felt, id_form: felt) -> (nickn
 
 // responses from a user for a form
 @storage_var
-func UserStorage_answer_form_list(user_address: felt, id_form: felt, id_question: felt) -> (answer: Uint256) {
+func UserStorage_answer_form_list(user_address: felt, id_form: felt) -> (answer_id: Uint256) {
 }
 
 namespace UserStorage{
@@ -65,9 +65,9 @@ namespace UserStorage{
         return (nickname,);
     }
 
-    func answer_form_list_read{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(user_address: felt, id_form: felt, id_question: felt) -> (answer: Uint256) {
-        let (answer,) = UserStorage_answer_form_list.read(user_address, id_form, id_question);
-        return (answer,);
+    func answer_form_list_read{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(user_address: felt, id_form: felt) -> (answer_id: Uint256) {
+        let (answer_id,) = UserStorage_answer_form_list.read(user_address, id_form);
+        return (answer_id,);
     }
 
     //
@@ -99,8 +99,8 @@ namespace UserStorage{
         return();
     }
 
-    func answer_form_list_write{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(user_address: felt, id_form: felt, id_question: felt, answer: Uint256) {
-        UserStorage_answer_form_list.write(user_address, id_form, id_question, answer);
+    func answer_form_list_write{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(user_address: felt, id_form: felt, answer_id: Uint256) {
+        UserStorage_answer_form_list.write(user_address, id_form, answer_id);
         return();
     }
 }
