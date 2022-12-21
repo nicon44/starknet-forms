@@ -5,7 +5,7 @@ from starkware.cairo.common.uint256 import Uint256
 
 from contracts.models.form import view_form, view_form_count, create_form, update_form, forms_change_status_ready, send_answer, close_form
 from contracts.models.question import view_questions, view_questions_count  
-from contracts.models.user import view_my_forms, view_answer_from_user
+from contracts.models.user import view_my_forms, view_answer_from_user, view_answers
 from contracts.types.data_types import DataTypes
 
 //
@@ -46,6 +46,12 @@ func get_my_forms{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_pt
 func get_answer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(form_id: felt, user_address: felt) -> (answer_id: Uint256) {
     let (answer_id: Uint256) = view_answer_from_user(form_id, user_address);
     return (answer_id,);
+}
+
+@view
+func get_answers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(form_id: felt) -> (records_len: felt, records: DataTypes.Row*) {
+    let (records_len, records: DataTypes.Row*) = view_answers(form_id);
+    return (records_len, records,);
 }
 
 //

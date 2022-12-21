@@ -9,10 +9,8 @@ namespace DataTypes {
     }
 
     struct Row {
-        id_form: felt,
-        name: felt,
-        status: felt,
         user: felt,
         nickname: felt,
+        answer_id: Uint256,
     }
 }

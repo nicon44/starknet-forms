@@ -34,6 +34,20 @@ func view_answer_from_user{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range
     return (answer_id,);
 }
 
+func view_answers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    form_id: felt) -> (records_len: felt, records: DataTypes.Row*) {
+    alloc_locals;
+
+    let (records: DataTypes.Row*) = alloc();
+    let (count_users) = UserStorage.in_form_count_read(form_id);
+
+    let (count_questions) = QuestionStorage.count_read(form_id);
+    
+    _recurse_view_answers(form_id, count_users, records, 0, count_questions);
+
+    return (count_users, records);
+}
+
 //
 // Private
 //
@@ -56,18 +70,34 @@ func _recurse_my_forms{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
     }
 }
 
-func _recurse_view_answers_records{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    id_form: felt, len: felt, arr: DataTypes.Row*, idx: felt, question_count: felt) -> () {
+func _recurse_view_answers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    form_id: felt, len: felt, arr: DataTypes.Row*, idx: felt, question_count: felt) -> () {
     if (idx == len) {
         return ();
     }
 
-    let (user: felt) = UserStorage.completed_form_list_read(id_form, idx);
-    let (nickname) = UserStorage.nickname_form_bool_read(user, id_form);
-    let (form: DataTypes.Form) = FormStorage.list_read(id_form);
+    let (user) = UserStorage.completed_form_list_read(form_id, idx);
+    let (nickname) = UserStorage.nickname_form_bool_read(user, form_id);
+    let (answer_id: Uint256) = UserStorage.answer_form_list_read(user, form_id);
+    
+    assert arr[idx] = DataTypes.Row(user, nickname, answer_id);
 
-    assert arr[idx] = DataTypes.Row(id_form, form.name, form.status, user, nickname);
-
-    _recurse_view_answers_records(id_form, len, arr, idx + 1, question_count);
+    _recurse_view_answers(form_id, len, arr, idx + 1, question_count);
     return ();
 }
+
+// func _recurse_view_answers_records{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+//     id_form: felt, len: felt, arr: DataTypes.Row*, idx: felt, question_count: felt) -> () {
+//     if (idx == len) {
+//         return ();
+//     }
+
+//     let (user: felt) = UserStorage.completed_form_list_read(id_form, idx);
+//     let (nickname) = UserStorage.nickname_form_bool_read(user, id_form);
+//     let (form: DataTypes.Form) = FormStorage.list_read(id_form);
+
+//     assert arr[idx] = DataTypes.Row(id_form, form.name, form.status, user, nickname);
+
+//     _recurse_view_answers_records(id_form, len, arr, idx + 1, question_count);
+//     return ();
+// }

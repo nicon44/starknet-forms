@@ -86,20 +86,6 @@ func view_form_count{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check
     return (count,);
 }
 
-// func view_row_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-//     form_id: felt) -> (records_len: felt, records: DataTypes.Row*) {
-//     alloc_locals;
-
-//     let (records: DataTypes.Row*) = alloc();
-//     let (count_users) = UserStorage.in_form_count_read(form_id);
-
-//     let (count_questions) = QuestionStorage.count_read(form_id);
-    
-//     _recurse_view_row(form_id, count_users, records, 0, count_questions);
-
-//     return (count_users, records);
-// }
-
 func create_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     name: felt, question_id: Uint256, questions_count: felt, status: felt)
     -> (form_id: felt) {
@@ -108,14 +94,10 @@ func create_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     // status correct
     assert_only_status_open_or_ready(status);
 
-    let (local form_id) = _create_form(name);
+    let (local form_id) = _create_form(name, status);
     
     QuestionStorage.list_write(form_id, question_id);
     QuestionStorage.count_write(form_id, questions_count);
-    
-    if (status == STATUS_READY) {
-        _change_status_ready_form(form_id, name);
-    }
     // modifico la cantidad de forms que creo el usuario
     _add_count_user_forms();
 
@@ -138,12 +120,10 @@ func update_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     assert_only_status_open(form.status);
     assert_only_questions_not_empty(questions_count);
 
+    let (local form_id) = _update_form(form_id, name, status);
+
     QuestionStorage.list_write(form_id, question_id);
     QuestionStorage.count_write(form_id, questions_count);
-
-    if (status == STATUS_READY) {
-        _change_status_ready_form(form_id, name);
-    }
 
     return ();
 }
@@ -214,12 +194,22 @@ func close_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}
 
 // Form
 func _create_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    name: felt) -> (form_id: felt) {
+    name: felt, status: felt) -> (form_id: felt) {
 
     let (form_id) = FormStorage.count_read();
     let (caller_address) = get_caller_address();
     
-    FormStorage.list_write(form_id, DataTypes.Form(form_id, name, caller_address, STATUS_OPEN));
+    FormStorage.list_write(form_id, DataTypes.Form(form_id, name, caller_address, status));
+    
+    FormStorage.count_write(form_id + 1);
+    return (form_id,);
+}
+
+func _update_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    form_id: felt, name: felt, status: felt) -> (form_id: felt) {
+
+    let (caller_address) = get_caller_address();
+    FormStorage.list_write(form_id, DataTypes.Form(form_id, name, caller_address, status));
     
     FormStorage.count_write(form_id + 1);
     return (form_id,);
@@ -239,27 +229,8 @@ func _change_status_close_form{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, r
     return ();
 }
 
-func _recurse_view_row{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    form_id: felt, len: felt, arr: DataTypes.Row*, idx: felt, question_count: felt) -> () {
-    if (idx == len) {
-        return ();
-    }
-
-    let (user) = UserStorage.completed_form_list_read(form_id, idx);
-    let (nickname) = UserStorage.nickname_form_bool_read(user, form_id);
-
-    let (form: DataTypes.Form) = FormStorage.list_read(form_id);
-    
-    assert arr[idx] = DataTypes.Row(form_id, form.name, form.status, user, nickname);
-
-    _recurse_view_row(form_id, len, arr, idx + 1, question_count);
-    return ();
-}
-
 func _add_count_user_forms{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> () {
     let (caller_address: felt) = get_caller_address();
-    // let (count: felt) = UserStorage.in_form_count_read(caller_address);
-    // UserStorage.in_form_count_write(caller_address, count + 1);
 
     let (count: felt) = UserStorage.created_forms_count_read(caller_address);
     UserStorage.created_forms_count_write(caller_address, count + 1);
