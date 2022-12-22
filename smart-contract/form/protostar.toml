@@ -4,3 +4,10 @@ lib-path = "lib"
 
 [contracts]
 main = ["contracts/main.cairo"]
+
+[build]
+cairo-path = ["./lib/cairo_contracts/src"]
+
+[profile.testnet.project]
+network="testnet"
+account-address="0x014032DA2716B9903E103E24A0aA4d389d45Bd105547C74d4BE734C46D2bCa09"

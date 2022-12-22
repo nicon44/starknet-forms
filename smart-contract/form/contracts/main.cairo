@@ -8,6 +8,16 @@ from contracts.models.question import view_questions, view_questions_count
 from contracts.models.user import view_my_forms, view_answer_from_user, view_answers
 from contracts.types.data_types import DataTypes
 
+from openzeppelin.upgrades.library import Proxy
+
+@external
+func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    proxy_admin
+) {
+    Proxy.initializer(proxy_admin); 
+    return ();
+}
+
 //
 // View
 // 
@@ -86,4 +96,35 @@ func form_send_answer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_chec
 func form_close{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(form_id: felt) -> () {
     close_form(form_id);
     return ();
+}
+
+// 
+// Proxy related functions
+// 
+@external
+func upgrade{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    new_implementation
+) {
+    Proxy.assert_only_admin();
+    Proxy._set_implementation_hash(new_implementation);
+    return ();
+}
+
+@external
+func setAdmin{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    new_admin
+) {
+    Proxy.assert_only_admin();
+    Proxy._set_admin(new_admin);
+    return ();
+}
+
+@view
+func getImplementationHash{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (implementation: felt) {
+    return Proxy.get_implementation_hash();
+}
+
+@view
+func getAdmin{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (admin: felt) {
+    return Proxy.get_admin();
 }
